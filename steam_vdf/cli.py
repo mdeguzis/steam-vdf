@@ -21,6 +21,10 @@ def parse_arguments():
         "-v", "--dump-vdfs", action="store_true", help="Enable dumping of VDFs to JSON"
     )
 
+    # Add parent parser arguments to main parser
+    for action in parent_parser._actions:
+        parser._add_action(action)
+
     # Create subparsers with parent
     subparsers = parser.add_subparsers(dest="command")
 
@@ -35,30 +39,27 @@ def parse_arguments():
     )
 
     # Other commands with shared parent
-    subparsers.add_parser(
+    add_parser = subparsers.add_parser(
         "add-shortcut",
         help="Add a new non-Steam game shortcut",
         parents=[parent_parser],
     )
 
-    subparsers.add_parser(
+    list_parser = subparsers.add_parser(
         "list-shortcuts",
         help="List existing non-Steam game shortcuts",
         parents=[parent_parser],
     )
 
-    subparsers.add_parser(
+    delete_parser = subparsers.add_parser(
         "delete-shortcut",
         help="Delete an existing non-Steam game shortcut",
         parents=[parent_parser],
     )
 
-    subparsers.add_parser(
+    restart_parser = subparsers.add_parser(
         "restart-steam", help="Restart Steam", parents=[parent_parser]
     )
-
-    # Add optional flags to main parser as well
-    parent_parser._add_container_actions(parser)
 
     args = parser.parse_args()
     if not args.command:
