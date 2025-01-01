@@ -436,7 +436,7 @@ def get_steam_user_names(args, steam_path):
                                     "Accounts"
                                 ].items():
                                     # Try both Steam32 and Steam64 IDs
-                                    steam64_id = steam32_to_steam64(user_id)
+                                    steam64_id = utils.steam32_to_steam64(user_id)
                                     if steam64_id in user_names:
                                         # We already have this user from loginusers.vdf
                                         continue
