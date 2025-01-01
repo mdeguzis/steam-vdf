@@ -1,59 +1,64 @@
 #!/usr/bin/env python
 
 import argparse
-import json
-import locale
-import logging
 
 from pathlib import Path
 
 from steam_vdf import users
 from steam_vdf import utils
 
-# Initialize
-report_filename = "/tmp/finance-buddy-report.json"
-log_filename = "/tmp/finance-buddy.log"
-
 
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description="Steam VDF Tool")
+
+    # Create parent parser for common arguments
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument(
+        "-d", "--debug", action="store_true", help="Enable debug output"
+    )
+    parent_parser.add_argument(
+        "-v", "--dump-vdfs", action="store_true", help="Enable dumping of VDFs to JSON"
+    )
+
+    # Create subparsers with parent
     subparsers = parser.add_subparsers(dest="command")
 
     # Info command and its options
     info_parser = subparsers.add_parser(
-        "info", help="Display Steam library information"
+        "info", help="Display Steam library information", parents=[parent_parser]
     )
     info_parser.add_argument(
         "--analyze-storage",
         action="store_true",
         help="Analyze storage usage including non-Steam directories",
     )
-    info_parser.set_defaults(info=True)
 
-    # Other main commands
-    add_parser = subparsers.add_parser(
-        "add-shortcut", help="Add a new non-Steam game shortcut"
+    # Other commands with shared parent
+    subparsers.add_parser(
+        "add-shortcut",
+        help="Add a new non-Steam game shortcut",
+        parents=[parent_parser],
     )
-    add_parser.set_defaults(add_shortcut=True)
 
-    list_parser = subparsers.add_parser(
-        "list-shortcuts", help="List existing non-Steam game shortcuts"
+    subparsers.add_parser(
+        "list-shortcuts",
+        help="List existing non-Steam game shortcuts",
+        parents=[parent_parser],
     )
-    list_parser.set_defaults(list_shortcuts=True)
 
-    delete_parser = subparsers.add_parser(
-        "delete-shortcut", help="Delete an existing non-Steam game shortcut"
+    subparsers.add_parser(
+        "delete-shortcut",
+        help="Delete an existing non-Steam game shortcut",
+        parents=[parent_parser],
     )
-    delete_parser.set_defaults(delete_shortcut=True)
 
-    restart_parser = subparsers.add_parser("restart-steam", help="Restart Steam")
-    restart_parser.set_defaults(restart_steam=True)
-
-    # Optional flags
-    parser.add_argument(
-        "-v", "--dump-vdfs", action="store_true", help="Enable dumping of VDFs to JSON"
+    subparsers.add_parser(
+        "restart-steam", help="Restart Steam", parents=[parent_parser]
     )
+
+    # Add optional flags to main parser as well
+    parent_parser._add_container_actions(parser)
 
     args = parser.parse_args()
     if not args.command:
@@ -64,29 +69,30 @@ def parse_arguments():
 
 
 def main():
-    # Initialize logger
-    logger = utils.setup_logging()
-
     # Parse arguments
     args = parse_arguments()
+
+    # Initialize logger
+    logger = utils.setup_logging(args.debug)
 
     logger.info("Starting Steam tool")
     # Initialize the matches attribute for the complete_path function
     utils.complete_path.matches = []
 
     # Find Steam libraries
-    all_libraries = users.find_steam_library_folders(args)
-    if not all_libraries:
-        logger.error("No Steam libraries found")
-        print("No Steam libraries found. Exiting.")
-        exit(1)
+    if not args.command == "restart-steam":
+        all_libraries = users.find_steam_library_folders(args)
+        if not all_libraries:
+            logger.error("No Steam libraries found")
+            print("No Steam libraries found. Exiting.")
+            exit(1)
 
-    # Select library
-    selected_library = users.choose_library(all_libraries)
-    if not selected_library:
-        logger.error("No Steam library selected")
-        print("No library selected. Exiting.")
-        exit(1)
+        # Select library
+        selected_library = users.choose_library(all_libraries)
+        if not selected_library:
+            logger.error("No Steam library selected")
+            print("No library selected. Exiting.")
+            exit(1)
 
     # Handle commands
     if args.command == "info":

@@ -1,7 +1,9 @@
-import logging
 import subprocess
-import os
 import time
+import readline
+import psutil
+import logging
+import os
 
 logger = logging.getLogger("cli")
 
@@ -48,85 +50,134 @@ def complete_path(text, state):
         return None
 
 
+def is_steam_running():
+    """Check if Steam process is running"""
+    for proc in psutil.process_iter(["name"]):
+        try:
+            # Check for both 'steam' and 'Steam' process names
+            if proc.info["name"].lower() == "steam":
+                logger.debug("Found running Steam process")
+                logger.debug(f"Process details: {proc.info}")
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
+
+
 def restart_steam():
     """
-    Prompt user to restart Steam and handle the restart process
+    Restart Steam and wait for it to fully start up
+    Returns True if successful, False otherwise
     """
+    MAX_WAIT_TIME = 60  # Maximum seconds to wait for Steam to start
+    CHECK_INTERVAL = 1  # Seconds between checks
+
+    logger.info("Attempting to restart Steam...")
     try:
-        restart = (
-            input("\nWould you like to restart Steam now? (y/N): ").strip().lower()
-        )
-        if restart == "y":
-            print("\nRestarting Steam...")
-            logger.info("User requested Steam restart")
+        # Check if Steam is running first
+        if is_steam_running():
+            logger.info("Stopping Steam...")
+            logger.debug("Terminating existing Steam process")
 
             # Kill existing Steam process
             try:
                 subprocess.run(["killall", "steam"], check=True)
-                logger.info("Successfully terminated Steam process")
+                logger.debug("Successfully terminated Steam process")
             except subprocess.CalledProcessError:
                 logger.warning("No Steam process found to terminate")
             except Exception as e:
                 logger.error(f"Error terminating Steam: {str(e)}")
                 return False
 
-            # Wait a moment for Steam to fully close
-            time.sleep(2)
+            # Wait for Steam to fully close
+            wait_time = 0
+            while is_steam_running() and wait_time < 10:
+                time.sleep(1)
+                wait_time += 1
 
-            # Start Steam in background
-            try:
-                subprocess.Popen(
-                    ["steam"],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True,
-                )
-                logger.info("Successfully started Steam")
-                print("Steam is restarting...")
+        # Start Steam in background
+        logger.info("Starting Steam...")
+        try:
+            subprocess.Popen(
+                ["steam"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            logger.debug("Steam start command issued")
+        except Exception as e:
+            logger.error("Error starting Steam. Please restart manually.")
+            exit(1)
+
+        # Wait for Steam to start
+        logger.debug("Waiting for Steam to start...")
+        wait_time = 0
+        while wait_time < MAX_WAIT_TIME:
+            if is_steam_running():
+                logger.debug("Steam has successfully restarted!")
+                logger.debug("Steam successfully restarted")
                 return True
-            except Exception as e:
-                logger.error(f"Error starting Steam: {str(e)}")
-                print("Error starting Steam. Please restart manually.")
-                return False
-        else:
-            print("\nPlease restart Steam manually for changes to take effect.")
-            return False
-    except (KeyboardInterrupt, EOFError):
-        logger.info("\nRestart operation cancelled by user")
-        print("\nPlease restart Steam manually for changes to take effect.")
+
+            time.sleep(CHECK_INTERVAL)
+            wait_time += CHECK_INTERVAL
+
+            # Show a progress indicator
+            if wait_time % 5 == 0:
+                logger.debug(f"Still waiting... ({wait_time}s)")
+
+        # If we get here, Steam didn't start in time
+        logger.error(f"Steam did not start within {MAX_WAIT_TIME} seconds")
+        logger.info("Please check Steam manually.")
+        exit(1)
+
+    except KeyboardInterrupt:
+        logger.info("Restart operation cancelled by user")
+        logger.info("Restart cancelled by user.")
         return False
+    except Exception as e:
+        logger.error(f"Unexpected error during Steam restart: {str(e)}")
+        exit(1)
 
 
-def setup_logging():
+def setup_logging(debug=False):
     """
     Configure logging for the application.
-    Creates a logs directory if it doesn't exist.
+    Args:
+        debug (bool): If True, sets logging level to DEBUG, otherwise INFO
     """
-    # Create logs directory if it doesn't exist
-    log_dir = "/tmp/"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
 
-    # Configure logger
-    logger = logging.getLogger("steam_library_finder")
-    logger.setLevel(logging.DEBUG)
+    # Only configure if handlers haven't been set up
+    if not logger.handlers:
+        # Set base logging level
+        base_level = logging.DEBUG if debug else logging.INFO
+        logger.setLevel(base_level)
 
-    # Create file handler
-    file_handler = logging.FileHandler(os.path.join(log_dir, "steam_library.log"))
-    file_handler.setLevel(logging.DEBUG)
+        # Create console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(base_level)
 
-    # Create console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+        # Create file handler for debug logging
+        log_dir = "/tmp/"
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
 
-    # Create formatter
-    formatter = logging.Formatter("%(levelname)s - %(message)s")
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
+        file_handler = logging.FileHandler(os.path.join(log_dir, "steam_vdf.log"))
+        file_handler.setLevel(logging.DEBUG)  # Always keep debug logging in file
 
-    # Add handlers to logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+        # Create formatters
+        console_fmt = "%(levelname)s - %(message)s"
+        file_fmt = "%(asctime)s - %(levelname)s - %(message)s"
+
+        console_formatter = logging.Formatter(console_fmt)
+        file_formatter = logging.Formatter(file_fmt)
+
+        # Apply formatters
+        console_handler.setFormatter(console_formatter)
+        file_handler.setFormatter(file_formatter)
+
+        # Add handlers
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
 
     return logger
 
