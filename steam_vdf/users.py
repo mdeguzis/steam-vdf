@@ -5,48 +5,17 @@ import json
 import logging
 import os
 import platform
-import readline
-import shutil
 import vdf
 from pathlib import Path
 
 
 from steam_vdf import utils
+from steam_vdf import storage
 
 logger = logging.getLogger("cli")
 
 
-def get_non_steam_usage(steam_path):
-    """Get sizes of directories on same drive as Steam, excluding Steam directory"""
-    steam_path = os.path.abspath(steam_path)
-    home_dir = str(Path.home())
-    parent_dir = os.path.dirname(steam_path)
-    sizes = []
-
-    for entry in os.scandir(parent_dir):
-        if entry.is_dir() and entry.path != steam_path:
-            try:
-                total = 0
-                for dirpath, dirnames, filenames in os.walk(entry.path):
-                    try:
-                        for f in filenames:
-                            fp = os.path.join(dirpath, f)
-                            if not os.path.islink(fp):
-                                total += os.path.getsize(fp)
-                    except (PermissionError, FileNotFoundError):
-                        continue
-
-                if total > 0:  # Only include if it has size
-                    sizes.append(
-                        {"path": entry.path, "size": total / (1024**3)}  # Convert to GB
-                    )
-            except (PermissionError, FileNotFoundError):
-                continue
-
-    return sorted(sizes, key=lambda x: x["size"], reverse=True)
-
-
-def add_shortcut():
+def add_shortcut(args, selected_library):
     shortcuts_vdf = os.path.join(selected_library, "userdata")
 
     if not os.path.exists(shortcuts_vdf):
@@ -66,7 +35,7 @@ def add_shortcut():
         exit(1)
 
     if len(user_dirs) > 1:
-        user_names = get_steam_user_names(selected_library)
+        user_names = get_steam_user_names(args, selected_library)
         print("\nMultiple Steam users found. Please choose one:")
         for idx, user_dir in enumerate(user_dirs, 1):
             user_info = user_names.get(
@@ -96,7 +65,7 @@ def add_shortcut():
                 logger.info("Please enter a valid number")
     else:
         user_dir = user_dirs[0]
-        user_names = get_steam_user_names(selected_library)
+        user_names = get_steam_user_names(args, selected_library)
         account_name = user_names.get(user_dir, "Unknown Account")
         logger.info(f"Using only available user: {user_dir} ({account_name})")
 
@@ -105,14 +74,13 @@ def add_shortcut():
     try:
         if os.path.exists(shortcuts_vdf):
             with open(shortcuts_vdf, "r", encoding="utf-8") as f:
-                shortcuts = load_shortcuts_file(shortcuts_vdf)
+                shortcuts = load_shortcuts_file(args, shortcuts_vdf)
                 new_entry = add_shortcut_entry()
                 if new_entry:
                     shortcuts = add_shortcut_to_shortcuts(shortcuts, new_entry)
                     if save_shortcuts(shortcuts_vdf, shortcuts):
                         logger.info("Shortcut added successfully")
-                        restart_steam()
-                        restart_steam()
+                        utils.restart_steam()
                     else:
                         logger.error("Failed to save shortcuts")
     except Exception as e:
@@ -120,7 +88,7 @@ def add_shortcut():
         exit(1)
 
 
-def dump_vdf_to_json(vdf_data, vdf_path):
+def dump_vdf_to_json(args, vdf_data, vdf_path):
     """
     Dump VDF data to JSON file in /tmp directory
     The JSON filename will include the source directory (steamapps or config)
@@ -155,7 +123,7 @@ def dump_vdf_to_json(vdf_data, vdf_path):
         return False
 
 
-def delete_shortcut(library_path):
+def delete_shortcut(args, library_path):
     """
     Delete an existing shortcut after selecting user and shortcut
     """
@@ -174,7 +142,7 @@ def delete_shortcut(library_path):
         logger.error("No Steam users found in userdata directory")
         return False
 
-    user_names = get_steam_user_names(library_path)
+    user_names = get_steam_user_names(args, library_path)
 
     # Present user selection
     print("\nAvailable Steam users:")
@@ -306,7 +274,7 @@ def delete_shortcut(library_path):
         return False
 
 
-def list_shortcuts(library_path):
+def list_shortcuts(args, library_path):
     """
     List existing non-Steam game shortcuts
     """
@@ -325,7 +293,7 @@ def list_shortcuts(library_path):
         logger.error("No Steam users found in userdata directory")
         return False
 
-    user_names = get_steam_user_names(library_path)
+    user_names = get_steam_user_names(args, library_path)
 
     for user_dir in user_dirs:
         shortcuts_vdf = os.path.join(userdata_path, user_dir, "config", "shortcuts.vdf")
@@ -399,23 +367,7 @@ def list_shortcuts(library_path):
     return True
 
 
-def steam64_to_steam32(steam64_id):
-    """Convert Steam64 ID to Steam32 ID"""
-    try:
-        return str(int(steam64_id) - 76561197960265728)
-    except (ValueError, TypeError):
-        return None
-
-
-def steam32_to_steam64(steam32_id):
-    """Convert Steam32 ID to Steam64 ID"""
-    try:
-        return str(int(steam32_id) + 76561197960265728)
-    except (ValueError, TypeError):
-        return None
-
-
-def get_steam_user_names(steam_path):
+def get_steam_user_names(args, steam_path):
     """
     Get Steam account names from both loginusers.vdf and config.vdf
     Returns a dictionary mapping user IDs to account names
@@ -430,12 +382,12 @@ def get_steam_user_names(steam_path):
         if os.path.exists(login_file):
             with open(login_file, "r", encoding="utf-8") as f:
                 login_data = vdf.load(f)
-                dump_vdf_to_json(login_data, login_file)
+                dump_vdf_to_json(args, login_data, login_file)
 
             if "users" in login_data:
                 for steam64_id, user_data in login_data["users"].items():
                     # Convert Steam64 ID to Steam32 ID
-                    steam32_id = steam64_to_steam32(steam64_id)
+                    steam32_id = utils.steam64_to_steam32(steam64_id)
                     if steam32_id:
                         user_names[steam32_id] = {
                             "PersonaName": user_data.get(
@@ -465,7 +417,7 @@ def get_steam_user_names(steam_path):
         if os.path.exists(config_file):
             with open(config_file, "r", encoding="utf-8") as f:
                 config_data = vdf.load(f)
-                dump_vdf_to_json(config_data, config_file)
+                dump_vdf_to_json(args, config_data, config_file)
 
             # Process config data...
             if "InstallConfigStore" in config_data:
@@ -505,45 +457,6 @@ def get_steam_user_names(steam_path):
     return user_names
 
 
-def get_installed_games(library_path):
-    apps_path = os.path.join(library_path, "steamapps")
-    installed_games = []
-
-    if os.path.exists(apps_path):
-        for file in os.listdir(apps_path):
-            if file.startswith("appmanifest_"):
-                manifest_path = os.path.join(apps_path, file)
-                try:
-                    with open(manifest_path, "r", encoding="utf-8") as f:
-                        manifest = vdf.load(f)
-                        app_data = manifest.get("AppState", {})
-                        installed_games.append(
-                            {
-                                "name": app_data.get("name", "Unknown"),
-                                "app_id": app_data.get("appid", "Unknown"),
-                                "size": int(app_data.get("SizeOnDisk", 0))
-                                / (1024 * 1024 * 1024),  # Convert to GB
-                            }
-                        )
-                except Exception as e:
-                    logger.error(f"Error reading manifest {file}: {str(e)}")
-
-    return installed_games
-
-
-def get_library_storage_info(library_path):
-    try:
-        total, used, free = shutil.disk_usage(library_path)
-        return {
-            "total": total // (1024 * 1024 * 1024),  # GB
-            "used": used // (1024 * 1024 * 1024),
-            "free": free // (1024 * 1024 * 1024),
-        }
-    except Exception as e:
-        logger.error(f"Error getting storage info: {str(e)}")
-        return None
-
-
 def get_recent_games(userdata_path, user_id):
     config_path = os.path.join(userdata_path, user_id, "config", "localconfig.vdf")
     recent_games = []
@@ -577,48 +490,7 @@ def get_recent_games(userdata_path, user_id):
     ]  # Return top 5
 
 
-def analyze_storage(steam_library):
-    storage_info = get_library_storage_info(steam_library)
-    if storage_info:
-        print("\nStorage Information:")
-        print(f"Total: {storage_info['total']} GB")
-        print(f"Used: {storage_info['used']} GB")
-        print(f"Free: {storage_info['free']} GB")
-
-    print("\nInstalled Games (Top 20 by size):")
-    installed_games = get_installed_games(steam_library)
-    if installed_games:
-        # Sort the games list by size in descending order and take top 20
-        sorted_games = sorted(installed_games, key=lambda x: x["size"], reverse=True)[
-            :20
-        ]
-        total_size = sum(
-            game["size"] for game in installed_games
-        )  # Calculate total from ALL games
-        for game in sorted_games:
-            print(f"- {game['name']} (ID: {game['app_id']}) - {game['size']:.2f} GB")
-        print(f"\nTotal space used by all games: {total_size:.2f} GB")
-    else:
-        print("No games installed")
-
-    # Add the non-Steam usage display
-    print("\nLargest Non-Steam Directories (Top 20):")
-    print("-" * 60)
-    sizes = get_non_steam_usage(steam_library)
-    if sizes:
-        total_non_steam = sum(item["size"] for item in sizes)
-        for item in sizes[:20]:
-            # Get relative path from home directory if possible
-            home = str(Path.home())
-            display_path = item["path"].replace(home, "~")
-            print(f"{display_path:<50} {item['size']:.2f} GB")
-        print("-" * 60)
-        print(f"Total size of all non-Steam directories: {total_non_steam:.2f} GB")
-    else:
-        print("No accessible non-Steam directories found")
-
-
-def get_user_info():
+def get_user_info(args, selected_library):
     # user account display code
     userdata_path = os.path.join(selected_library, "userdata")
     if os.path.exists(userdata_path):
@@ -629,13 +501,13 @@ def get_user_info():
         ]
 
         if user_dirs:
-            user_names = get_steam_user_names(selected_library)
+            user_names = get_steam_user_names(args, selected_library)
             print("\nSteam Accounts:")
             for user_dir in user_dirs:
                 # Try both the directory name and its Steam64 equivalent
                 user_info = user_names.get(user_dir, None)
                 if not user_info:
-                    steam64_id = steam32_to_steam64(user_dir)
+                    steam64_id = utils.steam32_to_steam64(user_dir)
                     if steam64_id:
                         user_info = user_names.get(steam64_id, None)
 
@@ -664,18 +536,18 @@ def get_user_info():
         print("\nNo Steam userdata directory found")
 
 
-def display_steam_info(this_steam_library):
+def display_steam_info(args, this_steam_library):
     """
     Display Steam library and account information
     """
     logger.info("Displaying Steam information")
 
     # Display user info
-    get_user_info()
+    get_user_info(args, this_steam_library)
 
     # Display storage information
     if args.analyze_storage:
-        analyze_storage(this_steam_library)
+        storage.analyze_storage(this_steam_library)
 
 
 def add_shortcut_entry():
@@ -690,13 +562,13 @@ def add_shortcut_entry():
         return None
 
     # Get the executable path
-    exe_path = prompt_path("Enter path to executable: ", is_file=True)
+    exe_path = utils.prompt_path("Enter path to executable: ", is_file=True)
     if not exe_path:
         return None
 
     # Get the start directory (default to executable's directory)
     exe_dir = os.path.dirname(exe_path)
-    start_dir = prompt_path(
+    start_dir = utils.prompt_path(
         "Enter start directory (press Enter for executable's directory): ",
         is_file=False,
         default_path=exe_dir,
@@ -728,55 +600,6 @@ def add_shortcut_entry():
     return entry
 
 
-def prompt_path(prompt_text, is_file=True, default_path=None):
-    """
-    Prompt for a path with autocompletion
-    """
-    readline.set_completer_delims(" \t\n;")
-    readline.parse_and_bind("tab: complete")
-    readline.set_completer(utils.complete_path)
-
-    while True:
-        try:
-            path = input(prompt_text).strip()
-
-            # Handle empty input - use default if provided
-            if not path:
-                if default_path:
-                    logger.info(f"Using default path: {default_path}")
-                    return default_path
-                else:
-                    logger.warning("Empty path provided")
-                    logger.info("Please enter a valid path")
-                    continue
-
-            # Expand user path if needed
-            if "~" in path:
-                path = os.path.expanduser(path)
-
-            # Convert to absolute path
-            path = os.path.abspath(path)
-
-            if is_file:
-                if os.path.isfile(path):
-                    return path
-                else:
-                    logger.warning(f"Invalid file path: {path}")
-                    logger.info("Please enter a valid file path")
-            else:
-                if os.path.isdir(path):
-                    return path
-                else:
-                    logger.warning(f"Invalid directory path: {path}")
-                    logger.info("Please enter a valid directory path")
-        except (KeyboardInterrupt, EOFError):
-            logger.info("\nOperation cancelled by user")
-            return None
-        except Exception as e:
-            logger.error(f"Error processing path: {str(e)}")
-            logger.info("Please enter a valid path")
-
-
 def add_shortcut_to_shortcuts(shortcuts, new_entry):
     """
     Add a new shortcut entry to the shortcuts structure
@@ -796,7 +619,7 @@ def add_shortcut_to_shortcuts(shortcuts, new_entry):
     return shortcuts
 
 
-def load_shortcuts_file(shortcuts_vdf):
+def load_shortcuts_file(args, shortcuts_vdf):
     """
     Load shortcuts.vdf file using binary mode
     """
@@ -806,7 +629,7 @@ def load_shortcuts_file(shortcuts_vdf):
                 shortcuts = vdf.binary_load(
                     f
                 )  # Use vdf.binary_load instead of vdf.load
-                dump_vdf_to_json(shortcuts, shortcuts_vdf)
+                dump_vdf_to_json(args, shortcuts, shortcuts_vdf)
                 return shortcuts
         else:
             logger.debug(f"No shortcuts.vdf found at: {shortcuts_vdf}")
@@ -831,7 +654,7 @@ def save_shortcuts(shortcuts_vdf, shortcuts):
         return False
 
 
-def find_steam_library():
+def find_steam_library(args):
     """
     Find the Steam library location based on the operating system.
     Returns the path to the Steam library or None if not found.
@@ -877,13 +700,13 @@ def find_steam_library():
     return None
 
 
-def find_steam_library_folders():
+def find_steam_library_folders(args):
     """
     Find all Steam library folders including additional library folders.
     Returns a list of paths to all found Steam libraries.
     """
     libraries = []
-    main_library = find_steam_library()
+    main_library = find_steam_library(args)
 
     if not main_library:
         logger.warning("No main Steam library found")
@@ -904,7 +727,7 @@ def find_steam_library_folders():
                 logger.debug(f"Reading VDF file: {vdf_path}")
                 with open(vdf_path, "r", encoding="utf-8") as f:
                     content = vdf.load(f)
-                    dump_vdf_to_json(content, vdf_path)
+                    dump_vdf_to_json(args, content, vdf_path)
 
                     # Process library folders
                     if isinstance(content, dict):
@@ -915,8 +738,7 @@ def find_steam_library_folders():
                                     logger.info(f"Found additional library at: {path}")
                                     libraries.append(path)
             except Exception as e:
-                logger.error(f"Error reading VDF file {vdf_path}: {str(e)}")
-                continue
+                raise Exception(f"Error reading VDF file {vdf_path}: {str(e)}")
 
     return libraries
 

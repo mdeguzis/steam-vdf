@@ -75,7 +75,7 @@ def main():
     utils.complete_path.matches = []
 
     # Find Steam libraries
-    all_libraries = users.find_steam_library_folders()
+    all_libraries = users.find_steam_library_folders(args)
     if not all_libraries:
         logger.error("No Steam libraries found")
         print("No Steam libraries found. Exiting.")
@@ -88,22 +88,18 @@ def main():
         print("No library selected. Exiting.")
         exit(1)
 
-    if args.info:
-        users.display_steam_info(selected_library)
-
-    elif args.list_shortcuts:
-        users.list_shortcuts(selected_library)
-
-    elif args.delete_shortcut:
-        users.delete_shortcut(selected_library)
+    # Handle commands
+    if args.command == "info":
+        users.display_steam_info(args, selected_library)
+    elif args.command == "list-shortcuts":
+        users.list_shortcuts(args, selected_library)
+    elif args.command == "delete-shortcut":
+        users.delete_shortcut(args, selected_library)
         utils.restart_steam()
-
-    elif args.restart_steam:
+    elif args.command == "restart-steam":
         utils.restart_steam()
-
-    elif args.add_shortcut:
-        # Add new shortcut
-        users.add_shortcut()
+    elif args.command == "add-shortcut":
+        users.add_shortcut(args, selected_library)
 
     logger.info("Exiting Steam VDF tool")
     logger.info("Make sure you restart steam for any changes to take effect")
