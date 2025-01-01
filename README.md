@@ -9,6 +9,7 @@ A command-line utility for managing Steam library data, non-Steam game shortcuts
 - Analyze storage usage of Steam and non-Steam directories
 - Export VDF files to JSON format
 - Restart Steam service
+- Analyze storage of Steam and Non-Steam games
 
 ## Installation
 
