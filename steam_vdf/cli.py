@@ -21,6 +21,7 @@ def parse_arguments():
         "-v", "--dump-vdfs", action="store_true", help="Enable dumping of VDFs to JSON"
     )
     parent_parser.add_argument(
+        "-o",
         "--output",
         choices=["json", "text"],
         default="text",

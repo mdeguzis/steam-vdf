@@ -268,7 +268,7 @@ def view_vdf(vdf_file, output_type):
         else:
             print(vdf_content)
     except FileNotFoundError:
-        logger.error(f"File not found: {args.file}")
+        logger.error(f"File not found: {vdf_file}")
         sys.exit(1)
     except Exception as e:
         logger.error(f"Error reading VDF file: {e}")
