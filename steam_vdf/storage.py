@@ -8,7 +8,7 @@ from humanize import naturalsize  # Add this import
 logger = logging.getLogger("cli")
 
 
-def analyze_storage(steam_library):
+def analyze_storage(args, steam_library):
     storage_info = get_library_storage_info(steam_library)
     if storage_info:
         print("\nStorage Information:")
@@ -16,32 +16,53 @@ def analyze_storage(steam_library):
         print(f"Used: {storage_info['used']}")
         print(f"Free: {storage_info['free']}")
 
-    print("\nInstalled Games (Top 20 by size):")
     installed_games = get_installed_games(steam_library)
     if installed_games:
-        # Sort the games list by size in descending order and take top 20
-        sorted_games = sorted(installed_games, key=lambda x: x["size"], reverse=True)[
-            :20
-        ]
+        # Sort the games list by size in descending order
+        sorted_games = sorted(
+            installed_games, key=lambda x: x["raw_size"], reverse=True
+        )
+
+        # Only take top 20 if --all is not specified
+        if not args.all:
+            sorted_games = sorted_games[:20]
+            print("\nInstalled Games (Top 20 by size):")
+        else:
+            print(f"\nInstalled Games (All {len(sorted_games)} games):")
+
         total_size = sum(game["raw_size"] for game in installed_games)
+
+        # Find the longest game name for padding
+        max_name_length = max(len(game["name"]) for game in sorted_games)
+        max_size_length = max(len(game["size"]) for game in sorted_games)
+
+        # Print header with extra spacing
+        print(f"{'Size':>12}    {'Game Name':<{max_name_length}}    {'(ID)':<12}")
+        print("-" * (12 + 4 + max_name_length + 4 + 12))  # Separator line
+
+        # Print each game with aligned columns and extra spacing
         for game in sorted_games:
-            print(f"- {game['name']} (ID: {game['app_id']}) - {game['size']}")
+            print(
+                f"{game['size']:>12}    {game['name']:<{max_name_length}}    (ID: {game['app_id']})"
+            )
+
+        print("-" * (12 + 4 + max_name_length + 4 + 12))  # Separator line
         print(f"\nTotal space used by all games: {naturalsize(total_size)}")
     else:
         print("No games installed")
 
     # Add the non-Steam usage display
     print("\nLargest Non-Steam Directories (Top 20):")
-    print("-" * 60)
+    print("-" * 70)  # Increased separator length
     sizes = get_non_steam_usage(steam_library)
     if sizes:
         total_non_steam = sum(item["raw_size"] for item in sizes)
-        for item in sizes[:20]:
+        for item in sizes[:20]:  # Always show top 20 for non-Steam directories
             # Get relative path from home directory if possible
             home = str(Path.home())
             display_path = item["path"].replace(home, "~")
-            print(f"{display_path:<50} {item['size']}")
-        print("-" * 60)
+            print(f"{item['size']:>12}    {display_path}")
+        print("-" * 70)  # Increased separator length
         print(
             f"Total size of all non-Steam directories: {naturalsize(total_non_steam)}"
         )

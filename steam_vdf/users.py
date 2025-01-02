@@ -514,11 +514,11 @@ def get_user_info(args, selected_library):
                     persona_name = user_info["PersonaName"]
                     account_name = user_info["AccountName"]
                     if account_name != "Unknown Account":
-                        print(f"- {user_dir} - {persona_name} ({account_name})")
+                        print(f"\t- {user_dir} - {persona_name} ({account_name})")
                     else:
-                        print(f"- {user_dir} - {persona_name}")
+                        print(f"\t- {user_dir} - {persona_name}")
                 else:
-                    print(f"- {user_dir} - Unknown Account")
+                    print(f"\t- {user_dir} - Unknown Account")
 
                 # Add recent games for each user
                 recent_games = get_recent_games(userdata_path, user_dir)
@@ -526,7 +526,7 @@ def get_user_info(args, selected_library):
                     print("\n  Recent Games:")
                     for game in recent_games:
                         print(
-                            f"  - App ID {game['app_id']}, Last played: {game['last_played']}"
+                            f"\t- App ID {game['app_id']}, Last played: {game['last_played']}"
                         )
         else:
             print("\nNo Steam accounts found")

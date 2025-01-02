@@ -1,6 +1,7 @@
 import subprocess
 import time
 import readline
+import datetime
 import json
 import sys
 import psutil
@@ -332,7 +333,7 @@ def view_vdf(vdf_file, output_type):
 def get_steam_client_version():
     """
     Get Steam client version from manifest file.
-    Returns a tuple of (version, is_beta)
+    Returns a tuple of (version, is_beta, timestamp)
     """
     logger.debug("Getting Steam client version from manifest file")
 
@@ -345,6 +346,7 @@ def get_steam_client_version():
 
     version = None
     is_beta = False
+    timestamp = None
 
     # First check for beta version
     if os.path.exists(beta_manifest_path):
@@ -355,7 +357,8 @@ def get_steam_client_version():
                     if '"version"' in line:
                         version = line.split('"')[3]  # Get the version between quotes
                         is_beta = True
-                        logger.debug(f"Found beta version: {version}")
+                        timestamp = datetime.datetime.fromtimestamp(int(version))
+                        logger.debug(f"Found beta version: {version} from {timestamp}")
                         break
         except Exception as e:
             logger.error(f"Error reading beta manifest: {e}")
@@ -368,16 +371,19 @@ def get_steam_client_version():
                 for line in f:
                     if '"version"' in line:
                         version = line.split('"')[3]  # Get the version between quotes
-                        logger.debug(f"Found regular version: {version}")
+                        timestamp = datetime.datetime.fromtimestamp(int(version))
+                        logger.debug(
+                            f"Found regular version: {version} from {timestamp}"
+                        )
                         break
         except Exception as e:
             logger.error(f"Error reading manifest: {e}")
 
     if not version:
         logger.error("No Steam client version found in manifest files")
-        return None, False
+        return None, False, None
 
-    return version, is_beta
+    return version, is_beta, timestamp
 
 
 def find_steam_libraries(args):
@@ -413,10 +419,22 @@ def display_steam_info(args, this_steam_library):
     logger.info("Displaying Steam information")
 
     # Display Steam info
-    version, is_beta = get_steam_client_version()
+    version, is_beta, timestamp = get_steam_client_version()
     if version:
-        logger.info(f"Steam Client Version: {version}")
-        logger.info(f"Is Beta: {is_beta}")
+        print("\nSteam Client Information:")
+        print(f"\t- Steam Client Version: {version}")
+        if timestamp:
+            print(f"\t- Last Updated: {timestamp}")
+            # Calculate how long ago this was
+            age = datetime.datetime.now() - timestamp
+            if age.days > 0:
+                print(f"\t- Age: {age.days} days old")
+            else:
+                hours = age.seconds // 3600
+                print(f"\t- Age: {hours} hours old")
+        else:
+            logger.info("Could not determine update timestamp")
+        print(f"\t- Is Beta: {is_beta}")
     else:
         logger.error("Could not determine Steam client version")
 
@@ -425,4 +443,4 @@ def display_steam_info(args, this_steam_library):
 
     # Display storage information
     if args.analyze_storage:
-        storage.analyze_storage(this_steam_library)
+        storage.analyze_storage(args, this_steam_library)

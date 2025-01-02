@@ -44,6 +44,11 @@ def parse_arguments():
         action="store_true",
         help="Analyze storage usage including non-Steam directories",
     )
+    info_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Show all information (e.g. all games)",
+    )
     list_parser = subparsers.add_parser(
         "list-shortcuts",
         help="List existing non-Steam game shortcuts",
