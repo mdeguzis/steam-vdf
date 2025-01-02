@@ -37,3 +37,17 @@ Some commands (such as info), have additional help information:
 ```
 steam-vdf info --help
 ```
+
+## Development
+
+### Install
+```
+# Install using pipenv (recommended)
+pipenv install --dev
+pipenv shell
+```
+
+### Build docs
+```
+pipenv run python setup.py build_sphinx
+```

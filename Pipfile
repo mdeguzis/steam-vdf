@@ -9,6 +9,10 @@ humanize = "*"
 psutil = "*"
 
 [dev-packages]
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
+sphinx-rtd-theme = "*"
+setuptools = "*"
 
 [requires]
 python_version = "3.8"
