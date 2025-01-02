@@ -80,7 +80,6 @@ def add_shortcut(args, selected_library):
                     shortcuts = add_shortcut_to_shortcuts(shortcuts, new_entry)
                     if save_shortcuts(shortcuts_vdf, shortcuts):
                         logger.info("Shortcut added successfully")
-                        utils.restart_steam()
                     else:
                         logger.error("Failed to save shortcuts")
     except Exception as e:

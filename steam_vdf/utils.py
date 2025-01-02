@@ -1,8 +1,11 @@
 import subprocess
 import time
 import readline
+import json
+import sys
 import psutil
 import logging
+import vdf
 import os
 
 logger = logging.getLogger("cli")
@@ -245,3 +248,54 @@ def prompt_path(prompt_text, is_file=True, default_path=None):
         except Exception as e:
             logger.error(f"Error processing path: {str(e)}")
             logger.info("Please enter a valid path")
+
+
+def view_vdf(vdf_file, output_type):
+    """
+    View the contents of a VDF file
+    Args:
+        vdf_file (str): Path to the VDF file
+        output_type (str): Type of output (json or raw)
+    """
+    logger.debug(f"Viewing VDF file: {vdf_file}")
+    try:
+        with open(vdf_file, "r", encoding="utf-8") as f:
+            vdf_content = f.read()
+
+        if output_type == "json":
+            parsed = vdf.loads(vdf_content)
+            print(json.dumps(parsed, indent=2))
+        else:
+            print(vdf_content)
+    except FileNotFoundError:
+        logger.error(f"File not found: {args.file}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error reading VDF file: {e}")
+        sys.exit(1)
+
+
+def find_steam_libraries(args):
+    """
+    Find Steam libraries based on the provided arguments
+    Args:
+        args: Parsed command-line arguments
+    Returns:
+        list: List of Steam library paths
+    """
+    logger.debug("Finding Steam libraries")
+
+    all_libraries = users.find_steam_library_folders(args)
+    if not all_libraries:
+        logger.error("No Steam libraries found")
+        print("No Steam libraries found. Exiting.")
+        exit(1)
+
+    # Select library
+    selected_library = users.choose_library(all_libraries)
+    if not selected_library:
+        logger.error("No Steam library selected")
+        print("No library selected. Exiting.")
+        exit(1)
+
+    return selected_library
