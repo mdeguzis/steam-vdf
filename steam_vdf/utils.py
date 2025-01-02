@@ -10,6 +10,9 @@ import os
 
 logger = logging.getLogger("cli")
 
+from steam_vdf import users
+from steam_vdf import storage
+
 
 def complete_path(text, state):
     """
@@ -326,6 +329,57 @@ def view_vdf(vdf_file, output_type):
         sys.exit(1)
 
 
+def get_steam_client_version():
+    """
+    Get Steam client version from manifest file.
+    Returns a tuple of (version, is_beta)
+    """
+    logger.debug("Getting Steam client version from manifest file")
+
+    # Expand paths for both regular and beta files
+    base_path = os.path.expanduser("~/.steam/steam/package")
+    manifest_path = os.path.join(base_path, "steam_client_ubuntu12.manifest")
+    beta_manifest_path = os.path.join(
+        base_path, "steam_client_publicbeta_ubuntu12.manifest"
+    )
+
+    version = None
+    is_beta = False
+
+    # First check for beta version
+    if os.path.exists(beta_manifest_path):
+        logger.debug(f"Found beta manifest: {beta_manifest_path}")
+        try:
+            with open(beta_manifest_path, "r") as f:
+                for line in f:
+                    if '"version"' in line:
+                        version = line.split('"')[3]  # Get the version between quotes
+                        is_beta = True
+                        logger.debug(f"Found beta version: {version}")
+                        break
+        except Exception as e:
+            logger.error(f"Error reading beta manifest: {e}")
+
+    # If no beta version found, check regular version
+    if not version and os.path.exists(manifest_path):
+        logger.debug(f"Found regular manifest: {manifest_path}")
+        try:
+            with open(manifest_path, "r") as f:
+                for line in f:
+                    if '"version"' in line:
+                        version = line.split('"')[3]  # Get the version between quotes
+                        logger.debug(f"Found regular version: {version}")
+                        break
+        except Exception as e:
+            logger.error(f"Error reading manifest: {e}")
+
+    if not version:
+        logger.error("No Steam client version found in manifest files")
+        return None, False
+
+    return version, is_beta
+
+
 def find_steam_libraries(args):
     """
     Find Steam libraries based on the provided arguments
@@ -350,3 +404,25 @@ def find_steam_libraries(args):
         exit(1)
 
     return selected_library
+
+
+def display_steam_info(args, this_steam_library):
+    """
+    Display Steam library and account information
+    """
+    logger.info("Displaying Steam information")
+
+    # Display Steam info
+    version, is_beta = get_steam_client_version()
+    if version:
+        logger.info(f"Steam Client Version: {version}")
+        logger.info(f"Is Beta: {is_beta}")
+    else:
+        logger.error("Could not determine Steam client version")
+
+    # Display user info
+    users.get_user_info(args, this_steam_library)
+
+    # Display storage information
+    if args.analyze_storage:
+        storage.analyze_storage(this_steam_library)

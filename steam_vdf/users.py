@@ -535,20 +535,6 @@ def get_user_info(args, selected_library):
         print("\nNo Steam userdata directory found")
 
 
-def display_steam_info(args, this_steam_library):
-    """
-    Display Steam library and account information
-    """
-    logger.info("Displaying Steam information")
-
-    # Display user info
-    get_user_info(args, this_steam_library)
-
-    # Display storage information
-    if args.analyze_storage:
-        storage.analyze_storage(this_steam_library)
-
-
 def add_shortcut_entry():
     """
     Add a new shortcut entry

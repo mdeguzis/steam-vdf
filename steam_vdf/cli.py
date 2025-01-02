@@ -95,7 +95,7 @@ def main():
     # Handle commands from parsers
     if args.command == "info":
         selected_library = users.find_steam_library(args)
-        users.display_steam_info(args, selected_library)
+        utils.display_steam_info(args, selected_library)
     elif args.command == "view":
         utils.view_vdf(args.file, args.output)
     elif args.command == "list-shortcuts":

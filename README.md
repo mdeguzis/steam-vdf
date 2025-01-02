@@ -7,7 +7,8 @@ A command-line utility for managing Steam library data, non-Steam game shortcuts
 - Display Steam library information and user accounts
 - List and manage non-Steam game shortcuts
 - Analyze storage usage of Steam and non-Steam directories
-- Export VDF files to JSON format
+- Export VDF files to JSON format (for valid types)
+- Binary VDF file support
 - Restart Steam service
 - Analyze storage of Steam and Non-Steam games
 
