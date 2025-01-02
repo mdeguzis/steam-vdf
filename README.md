@@ -26,3 +26,14 @@ pipenv shell
 # Or install using pip
 pip install -e .
 ```
+
+## Usage
+
+```
+steam-vdf --help
+```
+
+Some commands (such as info), have additional help information:
+```
+steam-vdf info --help
+```
