@@ -250,6 +250,25 @@ def prompt_path(prompt_text, is_file=True, default_path=None):
             logger.info("Please enter a valid path")
 
 
+def is_binary_file(file_path):
+
+    logger.debug("Checking if file is binary")
+    try:
+        with open(file_path, "rb") as file:
+            chunk = file.read(1024)  # Read a small chunk of the file
+            if b"\0" in chunk:  # Null bytes are common in binary files
+                return True
+            # Check for non-ASCII characters
+            if any(byte > 127 for byte in chunk):
+                logger.debug(f"File {file_path} is not ASCII, treating as binary.")
+                return True
+        logger.debug(f"Treating as non-binary file")
+        return False
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return False
+
+
 def view_vdf(vdf_file, output_type):
     """
     View the contents of a VDF file
@@ -259,14 +278,46 @@ def view_vdf(vdf_file, output_type):
     """
     logger.debug(f"Viewing VDF file: {vdf_file}")
     try:
-        with open(vdf_file, "r", encoding="utf-8") as f:
-            vdf_content = f.read()
-
-        if output_type == "json":
-            parsed = vdf.loads(vdf_content)
-            print(json.dumps(parsed, indent=2))
+        # First check if it's binary
+        if is_binary_file(vdf_file):
+            logger.debug("File is binary")
+            try:
+                with open(vdf_file, "rb") as f:
+                    content = f.read()
+                    try:
+                        parsed = vdf.binary_loads(content)
+                        if output_type == "json":
+                            print(json.dumps(parsed, indent=2))
+                        else:
+                            print(vdf.dumps(parsed, pretty=True))
+                    except Exception as e:
+                        logger.debug(f"Could not parse as VDF binary: {e}")
+                        # If we can't parse it, just show hex dump for binary files
+                        print("Binary file contents (hex dump):")
+                        for i in range(0, len(content), 16):
+                            chunk = content[i : i + 16]
+                            hex_values = " ".join(f"{b:02x}" for b in chunk)
+                            ascii_values = "".join(
+                                chr(b) if 32 <= b <= 126 else "." for b in chunk
+                            )
+                            print(f"{i:08x}  {hex_values:<48}  |{ascii_values}|")
+            except Exception as e:
+                logger.error(f"Error reading binary file: {e}")
+                sys.exit(1)
         else:
-            print(vdf_content)
+            logger.debug("File is text")
+            try:
+                with open(vdf_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                if output_type == "json":
+                    parsed = vdf.loads(content)
+                    print(json.dumps(parsed, indent=2))
+                else:
+                    print(content)
+            except Exception as e:
+                logger.error(f"Error reading text file: {e}")
+                sys.exit(1)
+
     except FileNotFoundError:
         logger.error(f"File not found: {vdf_file}")
         sys.exit(1)
