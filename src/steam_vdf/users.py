@@ -374,8 +374,9 @@ def _process_loginusers_data(login_data, user_names):
                 "Steam64ID": steam64_id,
             }
             logger.debug(
-                f"Found user in loginusers.vdf: "
-                f"Steam64:{steam64_id} -> Steam32:{steam32_id}"
+                "Found user in loginusers.vdf: " "Steam64: %s -> Steam32: %s",
+                steam64_id,
+                steam32_id,
             )
 
         # Also store under Steam64 ID
@@ -658,10 +659,10 @@ def save_shortcuts(shortcuts_vdf, shortcuts):
     try:
         with open(shortcuts_vdf, "wb") as f:
             vdf.binary_dump(shortcuts, f)
-        logger.info(f"Successfully saved shortcuts to: {shortcuts_vdf}")
+        logger.info("Successfully saved shortcuts to: %s", shortcuts_vdf)
         return True
     except Exception as e:
-        logger.error(f"Error saving shortcuts: {str(e)}")
+        logger.error("Error saving shortcuts: %s", e)
         return False
 
 
@@ -708,7 +709,7 @@ def find_steam_library(args):
             return path
 
     logger.warning("No Steam library found in common locations")
-    return None
+    exit(1)
 
 
 def find_steam_library_folders(args):

@@ -29,6 +29,10 @@ requirements:
 build: clean check
 	$(PYTHON) -m build
 
+upload:
+	twine check dist/*
+	twine upload dist/*
+
 # Documentation target
 docs:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

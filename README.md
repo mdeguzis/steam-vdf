@@ -55,7 +55,7 @@ pipenv shell
 
 ### Build docs
 ```
-pipenv run python setup.py build_sphinx
+make docs
 ```
 
 ### Distribute
@@ -67,7 +67,7 @@ make
 
 Upload
 ```
-twine upload dist/*
+make updload
 ```
 
 https://packaging.python.org/en/latest/tutorials/packaging-projects/
