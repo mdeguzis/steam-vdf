@@ -22,8 +22,12 @@ check:
 	flake8 .
 
 # Generate other items for dev
+# Output to requirements.txt to reduce maintenance load
+# pyproject.toml - modern main project file
+# requirements.txt - used by most automation, GitHub actions
+# Pipfile - pipenv only
 requirements:
-	pip-compile pyproject.toml
+	pip-compile pyproject.toml --output-file=requirements.txt
 
 # Main build target
 build: clean check

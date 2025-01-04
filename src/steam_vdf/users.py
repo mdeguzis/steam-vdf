@@ -61,7 +61,9 @@ def add_shortcut(args, selected_library):
                     user_dir = user_dirs[choice]
                     break
                 else:
-                    logger.info(f"Please enter a number between 1 and {len(user_dirs)}")
+                    logger.info(
+                        "Please enter a number between 1 and %s", len(user_dirs)
+                    )
             except ValueError:
                 logger.info("Please enter a valid number")
     else:
@@ -84,7 +86,7 @@ def add_shortcut(args, selected_library):
                     else:
                         logger.error("Failed to save shortcuts")
     except Exception as e:
-        logger.error(f"Error loading shortcuts.vdf: {str(e)}")
+        logger.error("Error loading shortcuts.vdf: %s", e)
         exit(1)
 
 
@@ -116,10 +118,10 @@ def dump_vdf_to_json(args, vdf_data, vdf_path):
     try:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(vdf_data, f, indent=4)
-        logger.info(f"VDF data ({base_name}) dumped to JSON at: {json_path}")
+        logger.info("VDF data ({base_name}) dumped to JSON at: %s", json_path)
         return True
     except Exception as e:
-        logger.error(f"Error dumping VDF to JSON: {str(e)}")
+        logger.error("Error dumping VDF to JSON: %s", e)
         return False
 
 
@@ -129,7 +131,7 @@ def delete_shortcut(args, library_path):
     """
     userdata_path = os.path.join(library_path, "userdata")
     if not os.path.exists(userdata_path):
-        logger.error(f"No userdata directory found at: {userdata_path}")
+        logger.error("No userdata directory found at: %s", userdata_path)
         return False
 
     user_dirs = [
@@ -250,7 +252,7 @@ def delete_shortcut(args, library_path):
                     with open(shortcuts_vdf, "wb") as f:
                         vdf.binary_dump(shortcuts, f)
 
-                    logger.info(f"Successfully deleted shortcut: {shortcut_name}")
+                    logger.info("Successfully deleted shortcut: %s", shortcut_name)
                     print(f"\nSuccessfully deleted shortcut: {shortcut_name}")
 
                     # Dump updated shortcuts to JSON
@@ -259,7 +261,7 @@ def delete_shortcut(args, library_path):
                     )
                     with open(json_path, "w", encoding="utf-8") as f:
                         json.dump(shortcuts, f, indent=4)
-                    logger.info(f"Updated shortcuts dumped to JSON at: {json_path}")
+                    logger.info("Updated shortcuts dumped to JSON at: %s", json_path)
 
                     return True
                 else:
@@ -270,11 +272,11 @@ def delete_shortcut(args, library_path):
                 logger.info("\nOperation cancelled by user")
                 return False
             except Exception as e:
-                logger.error(f"Error deleting shortcut: {str(e)}")
+                logger.error("Error deleting shortcut: %s", e)
                 return False
 
     except Exception as e:
-        logger.error(f"Error reading shortcuts file: {str(e)}")
+        logger.error("Error reading shortcuts file: %s", e)
         return False
 
 
@@ -282,7 +284,7 @@ def list_shortcuts(args, library_path):
     """List existing non-Steam game shortcuts"""
     userdata_path = os.path.join(library_path, "userdata")
     if not os.path.exists(userdata_path):
-        logger.error(f"No userdata directory found at: {userdata_path}")
+        logger.error("No userdata directory found at: %s", userdata_path)
         return False
 
     user_dirs = [
@@ -414,7 +416,7 @@ def _process_config_data(config_data, user_names):
                 "Steam64ID": steam64_id,
             }
     except Exception as e:
-        logger.error(f"Error processing config data: {e}")
+        logger.error("Error processing config data: %s", e)
 
 
 def get_steam_user_names(args, steam_path):
@@ -434,7 +436,7 @@ def get_steam_user_names(args, steam_path):
                 dump_vdf_to_json(args, login_data, login_file)
                 _process_loginusers_data(login_data, user_names)
     except Exception as e:
-        logger.error(f"Error reading loginusers.vdf: {e}")
+        logger.error("Error reading loginusers.vdf: %s", e)
 
     # Process config.vdf
     config_file = os.path.join(steam_path, "config", "config.vdf")
@@ -445,7 +447,7 @@ def get_steam_user_names(args, steam_path):
                 dump_vdf_to_json(args, config_data, config_file)
                 _process_config_data(config_data, user_names)
     except Exception as e:
-        logger.error(f"Error reading config.vdf: {e}")
+        logger.error("Error reading config.vdf: %s", e)
 
     return user_names
 
@@ -488,7 +490,7 @@ def get_recent_games(userdata_path, user_id):
                     recent_games.append(game_entry)
 
     except Exception as e:
-        logger.error(f"Error reading localconfig.vdf: {str(e)}")
+        logger.error("Error reading localconfig.vdf: %s", e)
 
     # Sort by last played time and return top 5
     return sorted(recent_games, key=lambda x: x["last_played"], reverse=True)[:5]
@@ -644,11 +646,10 @@ def load_shortcuts_file(args, shortcuts_vdf):
                 dump_vdf_to_json(args, shortcuts, shortcuts_vdf)
                 return shortcuts
         else:
-            logger.debug(f"No shortcuts.vdf found at: {shortcuts_vdf}")
+            logger.debug("No shortcuts.vdf found at: %s", shortcuts_vdf)
             return {"shortcuts": []}
     except Exception as e:
-        logger.error(f"Error loading shortcuts.vdf: {str(e)}")
-        print(f"Error loading shortcuts file: {str(e)}")
+        logger.error("Error loading shortcuts.vdf: %s", e)
         return {"shortcuts": []}
 
 
@@ -673,7 +674,7 @@ def find_steam_library(args):
     """
     system = platform.system().lower()
     home = os.path.expanduser("~")
-    logger.info(f"Searching for Steam library on {system} system")
+    logger.info("Searching for Steam library on %s system", system)
 
     if system == "windows":
         # Check common Windows locations
@@ -698,14 +699,14 @@ def find_steam_library(args):
             "/usr/share/steam",
         ]
     else:
-        logger.error(f"Unsupported operating system: {system}")
+        logger.error("Unsupported operating system: %s", system)
         return None
 
-    logger.debug(f"Checking possible paths: {possible_paths}")
+    logger.debug("Checking possible paths: %s", possible_paths)
     # Check each possible path
     for path in possible_paths:
         if os.path.exists(path):
-            logger.info(f"Found Steam library at: {path}")
+            logger.info("Found Steam library at: %s", path)
             return path
 
     logger.warning("No Steam library found in common locations")
@@ -732,11 +733,11 @@ def find_steam_library_folders(args):
         os.path.join(main_library, "config/libraryfolders.vdf"),
     ]
 
-    logger.debug(f"Checking VDF paths: {vdf_paths}")
+    logger.debug("Checking VDF paths: %s", vdf_paths)
     for vdf_path in vdf_paths:
         if os.path.exists(vdf_path):
             try:
-                logger.debug(f"Reading VDF file: {vdf_path}")
+                logger.debug("Reading VDF file: %s", vdf_path)
                 with open(vdf_path, "r", encoding="utf-8") as f:
                     content = vdf.load(f)
                     dump_vdf_to_json(args, content, vdf_path)
@@ -747,10 +748,10 @@ def find_steam_library_folders(args):
                             if isinstance(value, dict) and "path" in value:
                                 path = value["path"]
                                 if os.path.exists(path) and path not in libraries:
-                                    logger.info(f"Found additional library at: {path}")
+                                    logger.info("Found additional library at: %s", path)
                                     libraries.append(path)
             except Exception as e:
-                raise Exception(f"Error reading VDF file {vdf_path}: {str(e)}")
+                raise Exception("Error reading VDF file %s: %s", vdf_path, e)
 
     return libraries
 
@@ -766,12 +767,12 @@ def choose_library(libraries):
         return None
 
     if len(libraries) == 1:
-        logger.info(f"Using only available Steam library: {libraries[0]}")
+        logger.info("Using only available Steam library: %s", libraries[0])
         return libraries[0]
 
     logger.info("Available Steam libraries:")
     for idx, library in enumerate(libraries, 1):
-        logger.info(f"{idx}. {library}")
+        logger.info("%s. %s", idx, library)
 
     while True:
         try:
@@ -779,13 +780,13 @@ def choose_library(libraries):
             index = int(choice) - 1
             if 0 <= index < len(libraries):
                 selected = libraries[index]
-                logger.info(f"User selected library: {selected}")
+                logger.info("User selected library: %s", selected)
                 return selected
             else:
-                logger.warning(f"Invalid selection: {choice}")
-                logger.info(f"Please enter a number between 1 and {len(libraries)}")
+                logger.warning("Invalid selection: %s", choice)
+                logger.info("Please enter a number between 1 and %s", len(libraries))
         except ValueError:
-            logger.warning(f"Invalid input: {choice}")
+            logger.warning("Invalid input: %s", choice)
             logger.info("Please enter a valid number")
         except KeyboardInterrupt:
             logger.info("Operation cancelled by user")

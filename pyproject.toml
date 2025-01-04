@@ -2,11 +2,18 @@
 requires = [
     "setuptools>=61.0",
     "wheel",
-    "black>=23.0.0",
-    "autopep8",
-    "isort"
 ]
 build-backend = "setuptools.build_meta"
+
+# Pin flake8 so it's the same locally as in GitHub actions
+[project.optional-dependencies]
+dev = [
+    "autopep8",
+    "black>=23.0.0",
+    "flake8==6.1.0",
+    "isort",
+    "sphinx==7.1.2"
+]
 
 [project]
 name = "steam-vdf"
@@ -21,11 +28,6 @@ dependencies = [
     "vdf",
     "psutil",
     "humanize",
-]
-
-[project.optional-dependencies]
-docs = [
-    "sphinx==7.1.2",
 ]
 
 [project.scripts]
