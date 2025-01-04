@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "steam-vdf"
-version = "0.1.1"
+version = "0.1.2"
 description = "Do fun things with Steam VDF data files"
 readme = "README.md"
 authors = [
@@ -24,6 +24,11 @@ docs = [
 
 [project.scripts]
 steam-vdf = "steam_vdf.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mdeguzis/steam-vdf"
+Repository = "https://github.com/mdeguzis/steam-vdf"
+Issues = "https://github.com/mdeguzis/steam-vdf/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
