@@ -10,6 +10,7 @@ autopep8
 black
 flake8
 humanize==4.11.0
+isort
 psutil==6.1.1
 pytest
 vdf==3.4
