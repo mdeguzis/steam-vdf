@@ -209,7 +209,8 @@ def delete_shortcut(args, library_path):
             shortcut_list.append((idx, shortcut))
             exe_path = shortcut.get("Exe", "Unknown").strip('"')
             start_dir = shortcut.get("StartDir", "Unknown").strip('"')
-            print(f"\n{len(shortcut_list)}. {shortcut.get('AppName', 'Unknown')}:")
+            print()
+            print(f"{len(shortcut_list)}. {shortcut.get('AppName', 'Unknown')}:")
             print(f"    Executable: {exe_path}")
             print(f"    Start Dir: {start_dir}")
 
