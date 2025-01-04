@@ -14,6 +14,13 @@ A command-line utility for managing Steam library data, non-Steam game shortcuts
 
 ## Installation
 
+It is recommended to use pipx for system isolation best practices. 
+```
+pipx install steam-vdf
+```
+
+If you must use pip:
+
 ```
 pip install steam-vdf
 ```
@@ -32,7 +39,6 @@ steam-vdf info --help
 ## Development
 
 ### Install
-
 
 Install a local version with:
 ```
