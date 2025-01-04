@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "steam-vdf"
+version = "0.1.1"
+description = "Do fun things with Steam VDF data files"
+readme = "README.md"
+authors = [
+    {name = "Michael DeGuzis", email = "mdeguzis@gmail.com"},
+]
+requires-python = ">=3.6"
+dependencies = [
+    "vdf",
+    "psutil",
+    "humanize",
+]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx==7.1.2",
+]
+
+[project.scripts]
+steam-vdf = "steam_vdf.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.sphinx]
+project = "steam-vdf"
+version = "0.1"
+release = "0.1"
+source-dir = "docs/source"
+build-dir = "docs/build"
+all-files = true

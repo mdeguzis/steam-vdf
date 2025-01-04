@@ -15,16 +15,7 @@ A command-line utility for managing Steam library data, non-Steam game shortcuts
 ## Installation
 
 ```
-# Clone the repository
-git clone https://github.com/yourusername/steam-vdf.git
-cd steam-vdf
-
-# Install using pipenv (recommended)
-pipenv install
-pipenv shell
-
-# Or install using pip
-pip install -e .
+pip install steam-vdf
 ```
 
 ## Usage
@@ -41,6 +32,9 @@ steam-vdf info --help
 ## Development
 
 ### Install
+
+
+Install a local version with:
 ```
 # Install using pipenv (recommended)
 pipenv install --dev

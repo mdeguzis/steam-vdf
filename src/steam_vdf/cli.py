@@ -2,8 +2,6 @@
 
 import argparse
 
-from pathlib import Path
-
 from steam_vdf import users
 from steam_vdf import utils
 
