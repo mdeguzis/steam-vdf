@@ -334,14 +334,17 @@ def list_shortcuts(args, library_path):
             print("  " + "-" * 50)
 
             for idx, shortcut in shortcuts["shortcuts"].items():
+                exe_path = shortcut.get("Exe", "Unknown").strip('"')
+                app_name = shortcut.get("AppName", "Unknown")
+                start_dir = shortcut.get("StartDir", "Unknown").strip('"')
+                app_id = shortcut.get("appid", "Unknown")
+
                 print(f"\n  Shortcut #{idx}")
                 print("  " + "-" * 20)
-                print(f"    Name: {shortcut.get('AppName', 'Unknown')}")
-                print(f"    Executable: {shortcut.get('Exe', 'Unknown').strip('\"')}")
-                print(
-                    f"    Start Dir: {shortcut.get('StartDir', 'Unknown').strip('\"')}"
-                )
-                print(f"    App ID: {shortcut.get('appid', 'Unknown')}")
+                print(f"    Name: {app_name}")
+                print(f"    Executable: {exe_path}")
+                print(f"    Start Dir: {start_dir}")
+                print(f"    App ID: {app_id}")
 
                 # Only print these if they exist
                 if launch_opts := shortcut.get("LaunchOptions"):
