@@ -2,7 +2,6 @@
 ![GitHub License](https://img.shields.io/github/license/mdeguzis/steam-vdf)
 
 
-
 # Steam VDF Tool
 
 A command-line utility for managing Steam library data, non-Steam game shortcuts, and analyzing Steam storage usage.
