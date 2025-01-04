@@ -1,4 +1,6 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/steam-vdf)
+https://img.shields.io/github/license/mdeguzis/steam-vdf
+
 
 
 # Steam VDF Tool
