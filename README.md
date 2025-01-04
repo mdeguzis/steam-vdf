@@ -1,3 +1,6 @@
+![PyPI - Version](https://img.shields.io/pypi/v/steam-vdf)
+
+
 # Steam VDF Tool
 
 A command-line utility for managing Steam library data, non-Steam game shortcuts, and analyzing Steam storage usage.
