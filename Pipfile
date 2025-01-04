@@ -9,13 +9,16 @@ wheel = "*"
 vdf = "*"
 psutil = "*"
 humanize = "*"
-sphinx = "==7.1.2"
 steam-vdf = {file = ".", editable = true}
 
 [requires]
 python_version = "3"
 
 [dev-packages]
-pip-tools = "*"
+black = "*"
 build = "*"
+isort = "*"
+pip-tools = "*"
+pytest = "*"
+sphinx = "==7.1.2"
 twine = "*"

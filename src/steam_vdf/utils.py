@@ -1,18 +1,18 @@
-import subprocess
-import time
-import readline
 import datetime
 import json
-import sys
-import psutil
 import logging
-import vdf
 import os
+import readline
+import subprocess
+import sys
+import time
+
+import psutil
+import vdf
+
+from steam_vdf import storage, users
 
 logger = logging.getLogger("cli")
-
-from steam_vdf import users
-from steam_vdf import storage
 
 
 def complete_path(text, state):
@@ -66,7 +66,11 @@ def is_steam_running():
                 logger.debug("Found running Steam process")
                 logger.debug(f"Process details: {proc.info}")
                 return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        except (
+            psutil.NoSuchProcess,
+            psutil.AccessDenied,
+            psutil.ZombieProcess,
+        ):
             pass
     return False
 
@@ -113,7 +117,7 @@ def restart_steam():
             )
             logger.debug("Steam start command issued")
         except Exception as e:
-            logger.error("Error starting Steam. Please restart manually.")
+            logger.error("Error starting Steam. Please restart manually: %s", e)
             exit(1)
 
         # Wait for Steam to start
@@ -266,7 +270,7 @@ def is_binary_file(file_path):
             if any(byte > 127 for byte in chunk):
                 logger.debug(f"File {file_path} is not ASCII, treating as binary.")
                 return True
-        logger.debug(f"Treating as non-binary file")
+        logger.debug("Treating as non-binary file")
         return False
     except Exception as e:
         print(f"Error reading file: {e}")
@@ -295,8 +299,9 @@ def view_vdf(vdf_file, output_type):
                         else:
                             print(vdf.dumps(parsed, pretty=True))
                     except Exception as e:
-                        logger.debug(f"Could not parse as VDF binary: {e}")
-                        # If we can't parse it, just show hex dump for binary files
+                        logger.debug("Could not parse as VDF binary: %s", e)
+                        # If we can't parse it, just show hex dump for binary
+                        # files
                         print("Binary file contents (hex dump):")
                         for i in range(0, len(content), 16):
                             chunk = content[i : i + 16]
@@ -306,7 +311,7 @@ def view_vdf(vdf_file, output_type):
                             )
                             print(f"{i:08x}  {hex_values:<48}  |{ascii_values}|")
             except Exception as e:
-                logger.error(f"Error reading binary file: {e}")
+                logger.error("Error reading binary file: %s", e)
                 sys.exit(1)
         else:
             logger.debug("File is text")

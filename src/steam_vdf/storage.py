@@ -1,8 +1,9 @@
 import logging
-import shutil
-import vdf
 import os
+import shutil
 from pathlib import Path
+
+import vdf
 from humanize import naturalsize  # Add this import
 
 logger = logging.getLogger("cli")
@@ -34,7 +35,6 @@ def analyze_storage(args, steam_library):
 
         # Find the longest game name for padding
         max_name_length = max(len(game["name"]) for game in sorted_games)
-        max_size_length = max(len(game["size"]) for game in sorted_games)
 
         # Print header with extra spacing
         print(f"{'Size':>12}    {'Game Name':<{max_name_length}}    {'(ID)':<12}")
@@ -43,10 +43,12 @@ def analyze_storage(args, steam_library):
         # Print each game with aligned columns and extra spacing
         for game in sorted_games:
             print(
-                f"{game['size']:>12}    {game['name']:<{max_name_length}}    (ID: {game['app_id']})"
+                f"{game['size']:>12}    "
+                f"{game['name']:<{max_name_length}}    "
+                f"(ID: {game['app_id']})"
             )
 
-        print("-" * (12 + 4 + max_name_length + 4 + 12))  # Separator line
+        print("-" * (12 + 4 + max_name_length + 4 + 12))
         print(f"\nTotal space used by all games: {naturalsize(total_size)}")
     else:
         print("No games installed")
@@ -100,7 +102,6 @@ def get_installed_games(library_path):
 def get_non_steam_usage(steam_path):
     """Get sizes of directories on same drive as Steam, excluding Steam directory"""
     steam_path = os.path.abspath(steam_path)
-    home_dir = str(Path.home())
     parent_dir = os.path.dirname(steam_path)
     sizes = []
 

@@ -5,21 +5,22 @@ import json
 import logging
 import os
 import platform
-import vdf
-from pathlib import Path
 
+import vdf
 
 from steam_vdf import utils
-from steam_vdf import storage
 
 logger = logging.getLogger("cli")
 
 
 def add_shortcut(args, selected_library):
+    """
+    Add a shortcut to the shortcuts.vdf file.
+    """
     shortcuts_vdf = os.path.join(selected_library, "userdata")
 
     if not os.path.exists(shortcuts_vdf):
-        logger.error(f"No userdata directory found at: {shortcuts_vdf}")
+        logger.error("No userdata directory found at %s", shortcuts_vdf)
         print("No Steam user data found.")
         exit(1)
 
@@ -73,7 +74,7 @@ def add_shortcut(args, selected_library):
 
     try:
         if os.path.exists(shortcuts_vdf):
-            with open(shortcuts_vdf, "r", encoding="utf-8") as f:
+            with open(shortcuts_vdf, "r", encoding="utf-8"):
                 shortcuts = load_shortcuts_file(args, shortcuts_vdf)
                 new_entry = add_shortcut_entry()
                 if new_entry:
@@ -148,7 +149,10 @@ def delete_shortcut(args, library_path):
     for idx, user_dir in enumerate(user_dirs, 1):
         user_info = user_names.get(
             user_dir,
-            {"PersonaName": "Unknown Account", "AccountName": "Unknown Account"},
+            {
+                "PersonaName": "Unknown Account",
+                "AccountName": "Unknown Account",
+            },
         )
         persona_name = user_info["PersonaName"]
         account_name = user_info["AccountName"]
@@ -229,7 +233,8 @@ def delete_shortcut(args, library_path):
                     # Confirm deletion
                     confirm = (
                         input(
-                            f"\nAre you sure you want to delete '{shortcut_name}'? (y/N): "
+                            f"\nAre you sure you want to "
+                            f"delete '{shortcut_name}'? (y/N): "
                         )
                         .strip()
                         .lower()
@@ -274,9 +279,7 @@ def delete_shortcut(args, library_path):
 
 
 def list_shortcuts(args, library_path):
-    """
-    List existing non-Steam game shortcuts
-    """
+    """List existing non-Steam game shortcuts"""
     userdata_path = os.path.join(library_path, "userdata")
     if not os.path.exists(userdata_path):
         logger.error(f"No userdata directory found at: {userdata_path}")
@@ -305,65 +308,112 @@ def list_shortcuts(args, library_path):
         persona_name = user_info["PersonaName"]
         account_name = user_info["AccountName"]
 
+        # Print user header
         if account_name != "Unknown Account":
             print(f"\nShortcuts for user: {persona_name} ({account_name})")
         else:
             print(f"\nShortcuts for user: {persona_name}")
 
-        if os.path.exists(shortcuts_vdf):
-            print(f"Loading shortcuts from: {shortcuts_vdf}")
-            try:
-                with open(shortcuts_vdf, "rb") as f:
-                    shortcuts = vdf.binary_load(f)
-
-                if not shortcuts or "shortcuts" not in shortcuts:
-                    print("  No shortcuts found")
-                    continue
-
-                print("\n  Found shortcuts:")
-                print("  " + "-" * 50)
-
-                # The negative App IDs in Steam shortcuts are intentionally used to
-                # avoid conflicts with real Steam games, which use positive IDs.
-                # The negative IDs are generated using a hash of the shortcut's
-                # properties to create a unique identifier.
-                for idx, shortcut in shortcuts["shortcuts"].items():
-                    print(f"\n  Shortcut #{idx}:")
-                    print(f"    Name: {shortcut.get('AppName', 'Unknown')}")
-                    print(
-                        f"    Executable: {shortcut.get('Exe', 'Unknown').strip('\"')}"
-                    )
-                    print(
-                        f"    Start Directory: {shortcut.get('StartDir', 'Unknown').strip('\"')}"
-                    )
-                    print(f"    App ID: {shortcut.get('appid', 'Unknown')}")
-
-                    launch_options = shortcut.get("LaunchOptions", "")
-                    if launch_options:
-                        print(f"    Launch Options: {launch_options}")
-
-                    # Show if hidden
-                    if shortcut.get("IsHidden", 0) == 1:
-                        print("    [Hidden]")
-
-                    # Show icon path if it exists
-                    if shortcut.get("icon"):
-                        print(f"    Icon: {shortcut.get('icon')}")
-
-                    # Show tags if any
-                    tags = shortcut.get("tags", {})
-                    if tags:
-                        print("    Tags:", ", ".join(tags.values()))
-                print()
-            except Exception as e:
-                logger.error(
-                    f"Error reading shortcuts for user {persona_name}: {str(e)}"
-                )
-                print(f"  Error reading shortcuts: {str(e)}")
-        else:
+        if not os.path.exists(shortcuts_vdf):
             print("  No shortcuts.vdf file found")
+            continue
+
+        print(f"Loading shortcuts from: {shortcuts_vdf}")
+        try:
+            with open(shortcuts_vdf, "rb") as f:
+                shortcuts = vdf.binary_load(f)
+
+            if not shortcuts or "shortcuts" not in shortcuts:
+                print("  No shortcuts found")
+                continue
+
+            print("\n  Found shortcuts:")
+            print("  " + "-" * 50)
+
+            for idx, shortcut in shortcuts["shortcuts"].items():
+                print(f"\n  Shortcut #{idx}")
+                print("  " + "-" * 20)
+                print(f"    Name: {shortcut.get('AppName', 'Unknown')}")
+                print(f"    Executable: {shortcut.get('Exe', 'Unknown').strip('\"')}")
+                print(
+                    f"    Start Dir: {shortcut.get('StartDir', 'Unknown').strip('\"')}"
+                )
+                print(f"    App ID: {shortcut.get('appid', 'Unknown')}")
+
+                # Only print these if they exist
+                if launch_opts := shortcut.get("LaunchOptions"):
+                    print(f"    Launch Options: {launch_opts}")
+                if shortcut.get("IsHidden", 0) == 1:
+                    print("    [Hidden]")
+                if icon := shortcut.get("icon"):
+                    print(f"    Icon: {icon}")
+                if tags := shortcut.get("tags"):
+                    print("    Tags:", ", ".join(tags.values()))
+                print("  " + "-" * 20)
+
+            print()  # Extra newline for spacing between users
+
+        except Exception as e:
+            logger.error("Error reading shortcuts for user %s: %s", persona_name, e)
 
     return True
+
+
+def _process_loginusers_data(login_data, user_names):
+    """Process user data from loginusers.vdf"""
+    if "users" not in login_data:
+        return
+
+    for steam64_id, user_data in login_data["users"].items():
+        # Convert Steam64 ID to Steam32 ID
+        steam32_id = utils.steam64_to_steam32(steam64_id)
+        if steam32_id:
+            user_names[steam32_id] = {
+                "PersonaName": user_data.get("PersonaName", "Unknown Account"),
+                "AccountName": user_data.get("AccountName", "Unknown Account"),
+                "Steam64ID": steam64_id,
+            }
+            logger.debug(
+                f"Found user in loginusers.vdf: "
+                f"Steam64:{steam64_id} -> Steam32:{steam32_id}"
+            )
+
+        # Also store under Steam64 ID
+        user_names[steam64_id] = {
+            "PersonaName": user_data.get("PersonaName", "Unknown Account"),
+            "AccountName": user_data.get("AccountName", "Unknown Account"),
+            "Steam32ID": steam32_id,
+        }
+
+
+def _process_config_data(config_data, user_names):
+    """Process user data from config.vdf"""
+    try:
+        steam_config = (
+            config_data.get("InstallConfigStore", {})
+            .get("Software", {})
+            .get("Valve", {})
+            .get("Steam", {})
+        )
+
+        if "Accounts" not in steam_config:
+            return
+
+        for user_id, account_data in steam_config["Accounts"].items():
+            # Try both Steam32 and Steam64 IDs
+            steam64_id = utils.steam32_to_steam64(user_id)
+            if steam64_id in user_names:
+                # We already have this user from loginusers.vdf
+                continue
+
+            # If we don't have this user yet, add them
+            user_names[user_id] = {
+                "PersonaName": account_data.get("PersonaName", "Unknown Account"),
+                "AccountName": account_data.get("AccountName", "Unknown Account"),
+                "Steam64ID": steam64_id,
+            }
+    except Exception as e:
+        logger.error(f"Error processing config data: {e}")
 
 
 def get_steam_user_names(args, steam_path):
@@ -374,165 +424,141 @@ def get_steam_user_names(args, steam_path):
     logger.debug("Attempting to read Steam user names")
     user_names = {}
 
-    # Read from loginusers.vdf first
+    # Process loginusers.vdf
     login_file = os.path.join(steam_path, "config", "loginusers.vdf")
-
     try:
         if os.path.exists(login_file):
             with open(login_file, "r", encoding="utf-8") as f:
                 login_data = vdf.load(f)
                 dump_vdf_to_json(args, login_data, login_file)
-
-            if "users" in login_data:
-                for steam64_id, user_data in login_data["users"].items():
-                    # Convert Steam64 ID to Steam32 ID
-                    steam32_id = utils.steam64_to_steam32(steam64_id)
-                    if steam32_id:
-                        user_names[steam32_id] = {
-                            "PersonaName": user_data.get(
-                                "PersonaName", "Unknown Account"
-                            ),
-                            "AccountName": user_data.get(
-                                "AccountName", "Unknown Account"
-                            ),
-                            "Steam64ID": steam64_id,
-                        }
-                        logger.debug(
-                            f"Found user in loginusers.vdf: Steam64:{steam64_id} -> Steam32:{steam32_id}"
-                        )
-
-                    # Also store under Steam64 ID
-                    user_names[steam64_id] = {
-                        "PersonaName": user_data.get("PersonaName", "Unknown Account"),
-                        "AccountName": user_data.get("AccountName", "Unknown Account"),
-                        "Steam32ID": steam32_id,
-                    }
+                _process_loginusers_data(login_data, user_names)
     except Exception as e:
-        logger.error(f"Error reading loginusers.vdf: {str(e)}")
+        logger.error(f"Error reading loginusers.vdf: {e}")
 
-    # Then try config.vdf for additional info
+    # Process config.vdf
     config_file = os.path.join(steam_path, "config", "config.vdf")
     try:
         if os.path.exists(config_file):
             with open(config_file, "r", encoding="utf-8") as f:
                 config_data = vdf.load(f)
                 dump_vdf_to_json(args, config_data, config_file)
-
-            # Process config data...
-            if "InstallConfigStore" in config_data:
-                if "Software" in config_data["InstallConfigStore"]:
-                    if "Valve" in config_data["InstallConfigStore"]["Software"]:
-                        if (
-                            "Steam"
-                            in config_data["InstallConfigStore"]["Software"]["Valve"]
-                        ):
-                            steam_config = config_data["InstallConfigStore"][
-                                "Software"
-                            ]["Valve"]["Steam"]
-
-                            if "Accounts" in steam_config:
-                                for user_id, account_data in steam_config[
-                                    "Accounts"
-                                ].items():
-                                    # Try both Steam32 and Steam64 IDs
-                                    steam64_id = utils.steam32_to_steam64(user_id)
-                                    if steam64_id in user_names:
-                                        # We already have this user from loginusers.vdf
-                                        continue
-
-                                    # If we don't have this user yet, add them
-                                    user_names[user_id] = {
-                                        "PersonaName": account_data.get(
-                                            "PersonaName", "Unknown Account"
-                                        ),
-                                        "AccountName": account_data.get(
-                                            "AccountName", "Unknown Account"
-                                        ),
-                                        "Steam64ID": steam64_id,
-                                    }
+                _process_config_data(config_data, user_names)
     except Exception as e:
-        logger.error(f"Error reading config.vdf: {str(e)}")
+        logger.error(f"Error reading config.vdf: {e}")
 
     return user_names
 
 
+def _get_steam_config_from_localconfig(config):
+    """Extract Steam config from localconfig data structure"""
+    return config.get("Software", {}).get("Valve", {}).get("Steam", {})
+
+
+def _create_game_entry(app_id, app_data):
+    """Create a game entry from app data"""
+    return {
+        "app_id": app_id,
+        "last_played": datetime.datetime.fromtimestamp(int(app_data["LastPlayed"])),
+    }
+
+
 def get_recent_games(userdata_path, user_id):
+    """
+    Get the last 5 played games for a user
+    """
     config_path = os.path.join(userdata_path, user_id, "config", "localconfig.vdf")
     recent_games = []
 
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                config = vdf.load(f)
-                if (
-                    "Software" in config
-                    and "Valve" in config["Software"]
-                    and "Steam" in config["Software"]["Valve"]
-                ):
-                    steam_config = config["Software"]["Valve"]["Steam"]
-                    if "apps" in steam_config:
-                        for app_id, app_data in steam_config["apps"].items():
-                            if "LastPlayed" in app_data:
-                                recent_games.append(
-                                    {
-                                        "app_id": app_id,
-                                        "last_played": datetime.datetime.fromtimestamp(
-                                            int(app_data["LastPlayed"])
-                                        ),
-                                    }
-                                )
-        except Exception as e:
-            logger.error(f"Error reading localconfig.vdf: {str(e)}")
+    if not os.path.exists(config_path):
+        return recent_games
 
-    return sorted(recent_games, key=lambda x: x["last_played"], reverse=True)[
-        :5
-    ]  # Return top 5
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = vdf.load(f)
+            steam_config = _get_steam_config_from_localconfig(config)
+
+            if "apps" not in steam_config:
+                return recent_games
+
+            # Process each app's data
+            for app_id, app_data in steam_config["apps"].items():
+                if "LastPlayed" in app_data:
+                    game_entry = _create_game_entry(app_id, app_data)
+                    recent_games.append(game_entry)
+
+    except Exception as e:
+        logger.error(f"Error reading localconfig.vdf: {str(e)}")
+
+    # Sort by last played time and return top 5
+    return sorted(recent_games, key=lambda x: x["last_played"], reverse=True)[:5]
+
+
+def _format_user_display(user_dir, user_info):
+    """Format the user display string"""
+    if not user_info:
+        return f"\t- {user_dir} - Unknown Account"
+
+    persona_name = user_info["PersonaName"]
+    account_name = user_info["AccountName"]
+
+    if account_name != "Unknown Account":
+        return f"\t- {user_dir} - {persona_name} ({account_name})"
+
+    return f"\t- {user_dir} - {persona_name}"
+
+
+def _display_recent_games(games):
+    """Display recent games for a user"""
+    if not games:
+        return
+
+    print("\n  Recent Games:")
+    for game in games:
+        print(f"\t- App ID {game['app_id']}, " f"Last played: {game['last_played']}")
+
+
+def _get_user_info_from_names(user_dir, user_names):
+    """Get user info from user_names dict, trying both Steam32 and Steam64 IDs"""
+    user_info = user_names.get(user_dir)
+    if not user_info:
+        steam64_id = utils.steam32_to_steam64(user_dir)
+        if steam64_id:
+            user_info = user_names.get(steam64_id)
+    return user_info
 
 
 def get_user_info(args, selected_library):
-    # user account display code
+    """Display user account information"""
     userdata_path = os.path.join(selected_library, "userdata")
-    if os.path.exists(userdata_path):
-        user_dirs = [
-            d
-            for d in os.listdir(userdata_path)
-            if os.path.isdir(os.path.join(userdata_path, d))
-        ]
 
-        if user_dirs:
-            user_names = get_steam_user_names(args, selected_library)
-            print("\nSteam Accounts:")
-            for user_dir in user_dirs:
-                # Try both the directory name and its Steam64 equivalent
-                user_info = user_names.get(user_dir, None)
-                if not user_info:
-                    steam64_id = utils.steam32_to_steam64(user_dir)
-                    if steam64_id:
-                        user_info = user_names.get(steam64_id, None)
-
-                if user_info:
-                    persona_name = user_info["PersonaName"]
-                    account_name = user_info["AccountName"]
-                    if account_name != "Unknown Account":
-                        print(f"\t- {user_dir} - {persona_name} ({account_name})")
-                    else:
-                        print(f"\t- {user_dir} - {persona_name}")
-                else:
-                    print(f"\t- {user_dir} - Unknown Account")
-
-                # Add recent games for each user
-                recent_games = get_recent_games(userdata_path, user_dir)
-                if recent_games:
-                    print("\n  Recent Games:")
-                    for game in recent_games:
-                        print(
-                            f"\t- App ID {game['app_id']}, Last played: {game['last_played']}"
-                        )
-        else:
-            print("\nNo Steam accounts found")
-        print()
-    else:
+    if not os.path.exists(userdata_path):
         print("\nNo Steam userdata directory found")
+        return
+
+    user_dirs = [
+        d
+        for d in os.listdir(userdata_path)
+        if os.path.isdir(os.path.join(userdata_path, d))
+    ]
+
+    if not user_dirs:
+        print("\nNo Steam accounts found")
+        print()
+        return
+
+    user_names = get_steam_user_names(args, selected_library)
+    print("\nSteam Accounts:")
+
+    for user_dir in user_dirs:
+        # Get and display user info
+        user_info = _get_user_info_from_names(user_dir, user_names)
+        print(_format_user_display(user_dir, user_info))
+
+        # Display recent games
+        recent_games = get_recent_games(userdata_path, user_dir)
+        _display_recent_games(recent_games)
+
+    print()
 
 
 def add_shortcut_entry():
@@ -630,8 +656,8 @@ def save_shortcuts(shortcuts_vdf, shortcuts):
     Save the shortcuts back to the VDF file
     """
     try:
-        with open(shortcuts_vdf, "wb") as f:  # Use binary mode
-            vdf.binary_dump(shortcuts, f)  # Use vdf.binary_dump instead of vdf.dump
+        with open(shortcuts_vdf, "wb") as f:
+            vdf.binary_dump(shortcuts, f)
         logger.info(f"Successfully saved shortcuts to: {shortcuts_vdf}")
         return True
     except Exception as e:

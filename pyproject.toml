@@ -1,10 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "black>=23.0.0",
+    "autopep8",
+    "isort"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "steam-vdf"
-version = "0.1.2"
+version = "0.1.8"
 description = "Do fun things with Steam VDF data files"
 readme = "README.md"
 authors = [
@@ -29,6 +35,24 @@ steam-vdf = "steam_vdf.cli:main"
 Homepage = "https://github.com/mdeguzis/steam-vdf"
 Repository = "https://github.com/mdeguzis/steam-vdf"
 Issues = "https://github.com/mdeguzis/steam-vdf/issues"
+
+[tool.black]
+line-length = 79
+target-version = ['py37']
+include = '\.pyi?$'
+
+[tool.flake8]
+max-line-length = 90
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".venv",
+    "env",
+    "venv"
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

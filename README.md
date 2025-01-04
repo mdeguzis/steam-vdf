@@ -60,10 +60,13 @@ pipenv run python setup.py build_sphinx
 
 ### Distribute
 
+Build
 ```
-rm -rf dist/*
-python3 -m build
-twine check dist/*
+make
+```
+
+Upload
+```
 twine upload dist/*
 ```
 

@@ -2,8 +2,7 @@
 
 import argparse
 
-from steam_vdf import users
-from steam_vdf import utils
+from steam_vdf import users, utils
 
 
 def parse_arguments():
@@ -16,7 +15,10 @@ def parse_arguments():
         "-d", "--debug", action="store_true", help="Enable debug output"
     )
     parent_parser.add_argument(
-        "-v", "--dump-vdfs", action="store_true", help="Enable dumping of VDFs to JSON"
+        "-v",
+        "--dump-vdfs",
+        action="store_true",
+        help="Enable dumping of VDFs to JSON",
     )
     parent_parser.add_argument(
         "-o",
@@ -35,7 +37,9 @@ def parse_arguments():
 
     # View
     info_parser = subparsers.add_parser(
-        "info", help="Display Steam library information", parents=[parent_parser]
+        "info",
+        help="Display Steam library information",
+        parents=[parent_parser],
     )
     info_parser.add_argument(
         "--analyze-storage",
@@ -47,7 +51,7 @@ def parse_arguments():
         action="store_true",
         help="Show all information (e.g. all games)",
     )
-    list_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "list-shortcuts",
         help="List existing non-Steam game shortcuts",
         parents=[parent_parser],
@@ -58,21 +62,21 @@ def parse_arguments():
     view_parser.add_argument("file", type=str, help="Path to VDF file to view")
 
     # Add
-    add_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "add-shortcut",
         help="Add a new non-Steam game shortcut",
         parents=[parent_parser],
     )
 
     # Deletion  / Manipulation
-    delete_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "delete-shortcut",
         help="Delete an existing non-Steam game shortcut",
         parents=[parent_parser],
     )
 
     # System
-    restart_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "restart-steam", help="Restart Steam", parents=[parent_parser]
     )
 
@@ -85,6 +89,10 @@ def parse_arguments():
 
 
 def main():
+    """
+    Main function to handle command line arguments and execute the appropriate actions.
+    """
+
     # Parse arguments
     args = parse_arguments()
 
