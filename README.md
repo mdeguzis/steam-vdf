@@ -45,3 +45,14 @@ pipenv shell
 ```
 pipenv run python setup.py build_sphinx
 ```
+
+### Distribute
+
+```
+rm -rf dist/*
+python3 -m build
+twine check dist/*
+twine upload dist/*
+```
+
+https://packaging.python.org/en/latest/tutorials/packaging-projects/
