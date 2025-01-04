@@ -209,7 +209,7 @@ def delete_shortcut(args, library_path):
             shortcut_list.append((idx, shortcut))
             print()
             print(f"{len(shortcut_list)}. {shortcut.get('AppName', 'Unknown')}:")
-            print(f"    Executable: {shortcut.get('Exe', 'Unknown').strip('"')}")
+            print(f"    Executable: {shortcut.get('Exe', 'Unknown').strip('\\"')}")
             print(
                 f"   Start Directory: {shortcut.get('StartDir', 'Unknown').strip('\"')}"
             )
