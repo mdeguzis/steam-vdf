@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  Build-and-test-steam-vdf:
     runs-on: ubuntu-latest
     strategy:
       matrix:
