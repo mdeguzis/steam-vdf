@@ -1,5 +1,7 @@
-import pytest
 from unittest.mock import patch, MagicMock, mock_open
+
+import pytest
+
 from steam_vdf import users
 
 
