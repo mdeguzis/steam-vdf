@@ -37,7 +37,9 @@ def analyze_storage(args, steam_library):
         max_name_length = max(len(game["name"]) for game in sorted_games)
 
         # Print header with extra spacing
-        print(f"{'Size':>12}    {'Game Name':<{max_name_length}}    {'(ID)':<12}")
+        print(
+            f"{'Size':>12}    {'Game Name':<{max_name_length}}    {'(ID)':<12}"
+        )
         print("-" * (12 + 4 + max_name_length + 4 + 12))  # Separator line
 
         # Print each game with aligned columns and extra spacing

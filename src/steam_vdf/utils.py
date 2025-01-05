@@ -117,7 +117,9 @@ def restart_steam():
             )
             logger.debug("Steam start command issued")
         except Exception as e:
-            logger.error("Error starting Steam. Please restart manually: %s", e)
+            logger.error(
+                "Error starting Steam. Please restart manually: %s", e
+            )
             exit(1)
 
         # Wait for Steam to start
@@ -172,8 +174,12 @@ def setup_logging(debug=False):
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
-        file_handler = logging.FileHandler(os.path.join(log_dir, "steam_vdf.log"))
-        file_handler.setLevel(logging.DEBUG)  # Always keep debug logging in file
+        file_handler = logging.FileHandler(
+            os.path.join(log_dir, "steam_vdf.log")
+        )
+        file_handler.setLevel(
+            logging.DEBUG
+        )  # Always keep debug logging in file
 
         # Create formatters
         console_fmt = "%(levelname)s - %(message)s"
@@ -268,7 +274,9 @@ def is_binary_file(file_path):
                 return True
             # Check for non-ASCII characters
             if any(byte > 127 for byte in chunk):
-                logger.debug(f"File {file_path} is not ASCII, treating as binary.")
+                logger.debug(
+                    f"File {file_path} is not ASCII, treating as binary."
+                )
                 return True
         logger.debug("Treating as non-binary file")
         return False
@@ -307,9 +315,12 @@ def view_vdf(vdf_file, output_type):
                             chunk = content[i : i + 16]
                             hex_values = " ".join(f"{b:02x}" for b in chunk)
                             ascii_values = "".join(
-                                chr(b) if 32 <= b <= 126 else "." for b in chunk
+                                chr(b) if 32 <= b <= 126 else "."
+                                for b in chunk
                             )
-                            print(f"{i:08x}  {hex_values:<48}  |{ascii_values}|")
+                            print(
+                                f"{i:08x}  {hex_values:<48}  |{ascii_values}|"
+                            )
             except Exception as e:
                 logger.error("Error reading binary file: %s", e)
                 sys.exit(1)
@@ -360,10 +371,16 @@ def get_steam_client_version():
             with open(beta_manifest_path, "r") as f:
                 for line in f:
                     if '"version"' in line:
-                        version = line.split('"')[3]  # Get the version between quotes
+                        version = line.split('"')[
+                            3
+                        ]  # Get the version between quotes
                         is_beta = True
-                        timestamp = datetime.datetime.fromtimestamp(int(version))
-                        logger.debug(f"Found beta version: {version} from {timestamp}")
+                        timestamp = datetime.datetime.fromtimestamp(
+                            int(version)
+                        )
+                        logger.debug(
+                            f"Found beta version: {version} from {timestamp}"
+                        )
                         break
         except Exception as e:
             logger.error(f"Error reading beta manifest: {e}")
@@ -375,8 +392,12 @@ def get_steam_client_version():
             with open(manifest_path, "r") as f:
                 for line in f:
                     if '"version"' in line:
-                        version = line.split('"')[3]  # Get the version between quotes
-                        timestamp = datetime.datetime.fromtimestamp(int(version))
+                        version = line.split('"')[
+                            3
+                        ]  # Get the version between quotes
+                        timestamp = datetime.datetime.fromtimestamp(
+                            int(version)
+                        )
                         logger.debug(
                             f"Found regular version: {version} from {timestamp}"
                         )

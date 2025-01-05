@@ -1,48 +1,46 @@
-# Variables
-SPHINXOPTS    ?=
-SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = .
-BUILDDIR      = _build
-PYTHON        := python3
+.PHONY: setup clean test format check build lock
 
-# Set default goal
-.DEFAULT_GOAL := build
+POETRY := poetry
 
-# Declare PHONY targets
-.PHONY: check build docs clean
+.DEFAULT_GOAL := all
 
-# Fix formatting
+all: clean setup test
+
+# Update lock file
+lock:
+	$(POETRY) lock --no-update
+
+# Install dependencies and set up development environment
+setup: lock
+	$(POETRY) install
+	$(POETRY) run pip install -e .
+
+# Format code
 format:
-	isort .
-	black .
+	$(POETRY) run black .
+	$(POETRY) run isort .
 
-# Check formatting
+# Run linting and type checks
 check:
-	isort --check-only .
-	flake8 .
+	$(POETRY) run flake8 .
+	$(POETRY) run black --check .
+	$(POETRY) run isort --check .
 
-# Generate other items for dev
-# Output to requirements.txt to reduce maintenance load
-# pyproject.toml - modern main project file
-# requirements.txt - used by most automation, GitHub actions
-# Pipfile - pipenv only
-requirements:
-	pip-compile pyproject.toml --output-file=requirements.txt
+# Run tests
+test:
+	$(POETRY) run pytest
 
-# Main build target
-build: clean check
-	$(PYTHON) -m build
+test-verbose:
+	$(POETRY) run pytest -v --capture=no
 
-upload:
-	twine check dist/*
-	twine upload dist/*
-
-# Documentation target
-docs:
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+test-coverage:
+	$(POETRY) run pytest --cov=steam_vdf
 
 # Clean build artifacts
 clean:
-	rm -rf $(BUILDDIR)/*
-	rm -rf dist/*
+	rm -rf dist/
+	rm -rf build/
 	rm -rf *.egg-info
+	rm -rf .pytest_cache
+	rm -rf .coverage
+	find . -type d -name __pycache__ -exec rm -rf {} +

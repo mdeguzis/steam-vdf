@@ -62,7 +62,8 @@ def add_shortcut(args, selected_library):
                     break
                 else:
                     logger.info(
-                        "Please enter a number between 1 and %s", len(user_dirs)
+                        "Please enter a number between 1 and %s",
+                        len(user_dirs),
                     )
             except ValueError:
                 logger.info("Please enter a valid number")
@@ -72,7 +73,9 @@ def add_shortcut(args, selected_library):
         account_name = user_names.get(user_dir, "Unknown Account")
         logger.info(f"Using only available user: {user_dir} ({account_name})")
 
-    shortcuts_vdf = os.path.join(shortcuts_vdf, user_dir, "config", "shortcuts.vdf")
+    shortcuts_vdf = os.path.join(
+        shortcuts_vdf, user_dir, "config", "shortcuts.vdf"
+    )
 
     try:
         if os.path.exists(shortcuts_vdf):
@@ -210,7 +213,9 @@ def delete_shortcut(args, library_path):
             exe_path = shortcut.get("Exe", "Unknown").strip('"')
             start_dir = shortcut.get("StartDir", "Unknown").strip('"')
             print()
-            print(f"{len(shortcut_list)}. {shortcut.get('AppName', 'Unknown')}:")
+            print(
+                f"{len(shortcut_list)}. {shortcut.get('AppName', 'Unknown')}:"
+            )
             print(f"    Executable: {exe_path}")
             print(f"    Start Dir: {start_dir}")
 
@@ -253,7 +258,9 @@ def delete_shortcut(args, library_path):
                     with open(shortcuts_vdf, "wb") as f:
                         vdf.binary_dump(shortcuts, f)
 
-                    logger.info("Successfully deleted shortcut: %s", shortcut_name)
+                    logger.info(
+                        "Successfully deleted shortcut: %s", shortcut_name
+                    )
                     print(f"\nSuccessfully deleted shortcut: {shortcut_name}")
 
                     # Dump updated shortcuts to JSON
@@ -262,7 +269,9 @@ def delete_shortcut(args, library_path):
                     )
                     with open(json_path, "w", encoding="utf-8") as f:
                         json.dump(shortcuts, f, indent=4)
-                    logger.info("Updated shortcuts dumped to JSON at: %s", json_path)
+                    logger.info(
+                        "Updated shortcuts dumped to JSON at: %s", json_path
+                    )
 
                     return True
                 else:
@@ -301,12 +310,17 @@ def list_shortcuts(args, library_path):
     user_names = get_steam_user_names(args, library_path)
 
     for user_dir in user_dirs:
-        shortcuts_vdf = os.path.join(userdata_path, user_dir, "config", "shortcuts.vdf")
+        shortcuts_vdf = os.path.join(
+            userdata_path, user_dir, "config", "shortcuts.vdf"
+        )
 
         # Get user info
         user_info = user_names.get(
             user_dir,
-            {"PersonaName": "Unknown Account", "AccountName": "Unknown Account"},
+            {
+                "PersonaName": "Unknown Account",
+                "AccountName": "Unknown Account",
+            },
         )
         persona_name = user_info["PersonaName"]
         account_name = user_info["AccountName"]
@@ -360,7 +374,9 @@ def list_shortcuts(args, library_path):
             print()  # Extra newline for spacing between users
 
         except Exception as e:
-            logger.error("Error reading shortcuts for user %s: %s", persona_name, e)
+            logger.error(
+                "Error reading shortcuts for user %s: %s", persona_name, e
+            )
 
     return True
 
@@ -415,8 +431,12 @@ def _process_config_data(config_data, user_names):
 
             # If we don't have this user yet, add them
             user_names[user_id] = {
-                "PersonaName": account_data.get("PersonaName", "Unknown Account"),
-                "AccountName": account_data.get("AccountName", "Unknown Account"),
+                "PersonaName": account_data.get(
+                    "PersonaName", "Unknown Account"
+                ),
+                "AccountName": account_data.get(
+                    "AccountName", "Unknown Account"
+                ),
                 "Steam64ID": steam64_id,
             }
     except Exception as e:
@@ -465,7 +485,9 @@ def _create_game_entry(app_id, app_data):
     """Create a game entry from app data"""
     return {
         "app_id": app_id,
-        "last_played": datetime.datetime.fromtimestamp(int(app_data["LastPlayed"])),
+        "last_played": datetime.datetime.fromtimestamp(
+            int(app_data["LastPlayed"])
+        ),
     }
 
 
@@ -473,7 +495,9 @@ def get_recent_games(userdata_path, user_id):
     """
     Get the last 5 played games for a user
     """
-    config_path = os.path.join(userdata_path, user_id, "config", "localconfig.vdf")
+    config_path = os.path.join(
+        userdata_path, user_id, "config", "localconfig.vdf"
+    )
     recent_games = []
 
     if not os.path.exists(config_path):
@@ -497,7 +521,9 @@ def get_recent_games(userdata_path, user_id):
         logger.error("Error reading localconfig.vdf: %s", e)
 
     # Sort by last played time and return top 5
-    return sorted(recent_games, key=lambda x: x["last_played"], reverse=True)[:5]
+    return sorted(recent_games, key=lambda x: x["last_played"], reverse=True)[
+        :5
+    ]
 
 
 def _format_user_display(user_dir, user_info):
@@ -521,7 +547,10 @@ def _display_recent_games(games):
 
     print("\n  Recent Games:")
     for game in games:
-        print(f"\t- App ID {game['app_id']}, " f"Last played: {game['last_played']}")
+        print(
+            f"\t- App ID {game['app_id']}, "
+            f"Last played: {game['last_played']}"
+        )
 
 
 def _get_user_info_from_names(user_dir, user_names):
@@ -633,7 +662,9 @@ def add_shortcut_to_shortcuts(shortcuts, new_entry):
 
     # Add the new entry
     shortcuts["shortcuts"][str(next_index)] = new_entry
-    logger.info(f"Added new shortcut '{new_entry['appname']}' at index {next_index}")
+    logger.info(
+        f"Added new shortcut '{new_entry['appname']}' at index {next_index}"
+    )
     return shortcuts
 
 
@@ -751,8 +782,13 @@ def find_steam_library_folders(args):
                         for key, value in content.items():
                             if isinstance(value, dict) and "path" in value:
                                 path = value["path"]
-                                if os.path.exists(path) and path not in libraries:
-                                    logger.info("Found additional library at: %s", path)
+                                if (
+                                    os.path.exists(path)
+                                    and path not in libraries
+                                ):
+                                    logger.info(
+                                        "Found additional library at: %s", path
+                                    )
                                     libraries.append(path)
             except Exception as e:
                 raise Exception("Error reading VDF file %s: %s", vdf_path, e)
@@ -788,7 +824,9 @@ def choose_library(libraries):
                 return selected
             else:
                 logger.warning("Invalid selection: %s", choice)
-                logger.info("Please enter a number between 1 and %s", len(libraries))
+                logger.info(
+                    "Please enter a number between 1 and %s", len(libraries)
+                )
         except ValueError:
             logger.warning("Invalid input: %s", choice)
             logger.info("Please enter a valid number")

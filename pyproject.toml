@@ -1,81 +1,29 @@
-[build-system]
-requires = [
-    "setuptools>=61.0",
-    "wheel",
-]
-build-backend = "setuptools.build_meta"
-
-# Pin flake8 so it's the same locally as in GitHub actions
-[project.optional-dependencies]
-dev = [
-    "autopep8",
-    "black>=23.0.0",
-    "flake8==6.1.0",
-    "isort",
-    "sphinx==7.1.2"
-]
-
-[project]
+[tool.poetry]
 name = "steam-vdf"
 version = "0.1.8"
-description = "Do fun things with Steam VDF data files"
+description = "Steam VDF file parser"
+authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-authors = [
-    {name = "Michael DeGuzis", email = "mdeguzis@gmail.com"},
-]
-requires-python = ">=3.6"
-dependencies = [
-    "vdf",
-    "psutil",
-    "humanize",
-]
+packages = [{include = "steam_vdf", from = "src"}]
 
-[project.scripts]
-steam-vdf = "steam_vdf.cli:main"
+[tool.poetry.dependencies]
+humanize = "^4.9.0"
+python = "^3.11"
+vdf = "^3.4"
+psutil = "*" 
 
-[project.urls]
-Homepage = "https://github.com/mdeguzis/steam-vdf"
-Repository = "https://github.com/mdeguzis/steam-vdf"
-Issues = "https://github.com/mdeguzis/steam-vdf/issues"
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+black = "^23.0.0"
+isort = "^5.12.0"
+flake8 = "^6.0.0"
+pytest-cov = "^4.1.0"
 
-[tool.black]
-line-length = 79
-target-version = ['py37']
-include = '\.pyi?$'
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
-[tool.flake8]
-max-line-length = 90
-exclude = [
-    ".git",
-    "__pycache__",
-    "build",
-    "dist",
-    "*.egg-info",
-    ".venv",
-    "env",
-    "venv"
-]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 79
-
-
-[tool.sphinx]
-project = "steam-vdf"
-version = "0.1"
-release = "0.1"
-source-dir = "docs/source"
-build-dir = "docs/build"
-all-files = true
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v"
