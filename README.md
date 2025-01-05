@@ -1,4 +1,4 @@
-![Static Badge](https://img.shields.io/badge/Python-3.x-orange)
+![Static Badge](https://img.shields.io/badge/Python-orange)
 ![PyPI - Version](https://img.shields.io/pypi/v/steam-vdf)
 ![GitHub License](https://img.shields.io/github/license/mdeguzis/steam-vdf)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/mdeguzis/steam-vdf/python-app.yml)
