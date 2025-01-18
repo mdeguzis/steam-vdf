@@ -4,7 +4,7 @@ POETRY := poetry
 
 .DEFAULT_GOAL := all
 
-all: clean setup test
+all: clean setup build test
 
 # Update lock file
 lock:
@@ -14,6 +14,13 @@ lock:
 setup: lock
 	$(POETRY) install
 	$(POETRY) run pip install -e .
+
+build:
+	$(POETRY) build
+
+# Upload the package to PyPI
+upload: build
+	twine upload dist/*
 
 # Format code
 format:
@@ -44,3 +51,4 @@ clean:
 	rm -rf .pytest_cache
 	rm -rf .coverage
 	find . -type d -name __pycache__ -exec rm -rf {} +
+	$(POETRY) env remove python || true

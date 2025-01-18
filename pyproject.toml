@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "steam-vdf"
-version = "0.1.8"
+version = "0.1.9"
 description = "Steam VDF file parser"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-packages = [{include = "steam_vdf", from = "src"}]
+packages = [{include = "steam_vdf", from = "src",  format = "sdist" }]
 
 [tool.poetry.dependencies]
 humanize = "^4.9.0"
-python = "^3.11"
+python = "^3.12"
 vdf = "^3.4"
 psutil = "*" 
 
@@ -37,3 +37,6 @@ build-backend = "poetry.core.masonry.api"
 testpaths = ["tests"]
 python_files = "test_*.py"
 addopts = "-v"
+
+[tool.poetry.scripts]
+steam-vdf = "steam_vdf.cli:main"

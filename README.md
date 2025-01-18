@@ -67,7 +67,7 @@ make
 
 Upload
 ```
-make updload
+make upload
 ```
 
 https://packaging.python.org/en/latest/tutorials/packaging-projects/
