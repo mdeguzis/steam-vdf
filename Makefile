@@ -8,7 +8,7 @@ all: clean setup test
 
 # Update lock file
 lock:
-	$(POETRY) lock --no-update
+	$(POETRY) lock
 
 # Install dependencies and set up development environment
 setup: lock
