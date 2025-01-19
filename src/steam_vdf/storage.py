@@ -37,9 +37,7 @@ def analyze_storage(args, steam_library):
         max_name_length = max(len(game["name"]) for game in sorted_games)
 
         # Print header with extra spacing
-        print(
-            f"{'Size':>12}    {'Game Name':<{max_name_length}}    {'(ID)':<12}"
-        )
+        print(f"{'Size':>12}    {'Game Name':<{max_name_length}}    {'(ID)':<12}")
         print("-" * (12 + 4 + max_name_length + 4 + 12))  # Separator line
 
         # Print each game with aligned columns and extra spacing
@@ -105,10 +103,19 @@ def get_non_steam_usage(steam_path):
     """Get sizes of directories on same drive as Steam, excluding Steam directory"""
     steam_path = os.path.abspath(steam_path)
     parent_dir = os.path.dirname(steam_path)
+
     sizes = []
 
+    # Ignore known steam paths
+    ignored_dirs = [
+        steam_path,
+    ]
+
+    # Convert the ignored directories list to a set for fast lookup
+    ignored_dirs_set = set(ignored_dirs)
+
     for entry in os.scandir(parent_dir):
-        if entry.is_dir() and entry.path != steam_path:
+        if entry.is_dir() and entry.path not in ignored_dirs_set:
             try:
                 total = 0
                 for dirpath, dirnames, filenames in os.walk(entry.path):
