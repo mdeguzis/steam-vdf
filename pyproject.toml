@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "steam-vdf"
-version = "0.1.9"
+version = "0.1.10"
 description = "Steam VDF file parser"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
@@ -8,7 +8,7 @@ packages = [{include = "steam_vdf", from = "src",  format = "sdist" }]
 
 [tool.poetry.dependencies]
 humanize = "^4.9.0"
-python = "^3.12"
+python = "^3.10"
 vdf = "^3.4"
 psutil = "*" 
 

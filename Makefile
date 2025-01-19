@@ -4,6 +4,12 @@ POETRY := poetry
 
 .DEFAULT_GOAL := all
 
+# Match with maximum set in pyproject.toml
+# Use mise to make this easy in the parent env
+# Example: mise use python@3.10 python@3.11 python@3.12
+PYTHON_VERSION := python3.10
+VENV_PATH := $(shell $(POETRY) env info -p 2>/dev/null)
+
 all: clean setup build test
 
 # Update lock file
@@ -13,6 +19,7 @@ lock:
 # Install dependencies and set up development environment
 setup: lock
 	$(POETRY) install
+	$(POETRY) env use $(PYTHON_VERSION)
 	$(POETRY) run pip install -e .
 
 build:
